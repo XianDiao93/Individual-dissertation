@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>AI-Driven Trade Communication Assistant</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --bg-elevated: #020617;
+            --accent-soft: rgba(56, 189, 248, 0.15);
+            --text: #e5e7eb;
+            --text-soft: #9ca3af;
+            --border: #1f2937;
+            --danger: #f97373;
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --transition-fast: 0.18s ease-out;
+        }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+        background: radial-gradient(circle at top, #1f2937 0, #020617 50%, #020617 100%);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        }
+
+        .app-shell {
+        width: 100%;
+        max-width: 1200px;
+        padding: 24px 16px 32px;
+        }
+
+        .card {
+        background: radial-gradient(circle at top left, #0b1120 0, #020617 55%);
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid rgba(148, 163, 184, 0.15);
+        box-shadow:
+        0 24px 60px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(15, 23, 42, 0.3);
+        backdrop-filter: blur(18px);
+        }
+
+        .header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 20px;
+        }
+
+        .title-wrap h1 {
+        font-size: 1.4rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        }
+
+        .title-pill {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        color: var(--text-soft);
+        }
+
+        .subtitle {
+        margin: 4px 0 0;
+        font-size: 0.85rem;
+        color: var(--text-soft);
+        }
+
+        .status-pill {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(22, 163, 74, 0.1);
+        color: #4ade80;
+        font-size: 0.8rem;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        }
+
+        .main-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+        gap: 18px;
+        margin-top: 8px;
+        }
+
+        @media (max-width: 900px) {
+        .main-layout {
+            grid-template-columns: minmax(0, 1fr);
+        }
+        }
+
+        .panel {
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.85));
+        border-radius: var(--radius-lg);
+        border: 1px solid rgba(31, 41, 55, 0.9);
+        padding: 16px 16px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 280px;
+        }
+
+        .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        }
+
+        .panel-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        }
+
+        .badge {
+        font-size: 0.7rem;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.8);
+        color: var(--text-soft);
+        border: 1px solid rgba(55, 65, 81, 0.7);
+        }
+
+        .tabs {
+        display: inline-flex;
+        background: radial-gradient(circle at top, #020617 0, #020617 100%);
+        border-radius: 999px;
+        padding: 3px;
+        border: 1px solid rgba(55, 65, 81, 0.7);
+        }
+
+        .tab-btn {
+        border: none;
+        background: transparent;
+        color: var(--text-soft);
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition: background var(--transition-fast), color var(--transition-fast),
+        transform 0.08s ease-out;
+        white-space: nowrap;
+        }
+
+        .tab-btn.active {
+        background: radial-gradient(circle at top, #0ea5e9 0, #0369a1 80%);
+        color: white;
+        transform: translateY(-0.5px);
+        box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.3),
+        0 5px 12px rgba(8, 47, 73, 0.9);
+        }
+
+        textarea,
+        input[type="text"],
+        input[type="number"],
+        select {
+        width: 100%;
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(55, 65, 81, 0.9);
+        background: rgba(15, 23, 42, 0.9);
+        color: var(--text);
+        font-size: 0.85rem;
+        padding: 7px 9px;
+        outline: none;
+        }
+
+        textarea {
+        min-height: 120px;
+        resize: vertical;
+        }
+
+        .btn {
+        border: none;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        padding: 7px 14px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        }
+
+        .btn-primary {
+        background: radial-gradient(circle at top, #0ea5e9 0, #0369a1 80%);
+        color: white;
+        }
+
+        .response-body {
+        margin-top: 4px;
+        padding: 8px 10px;
+        border-radius: var(--radius-md);
+        background: radial-gradient(circle at top left, #020617 0, #020617 100%);
+        border: 1px solid rgba(31, 41, 55, 0.95);
+        min-height: 140px;
+        max-height: 360px;
+        overflow: auto;
+        font-size: 0.84rem;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        }
+
+        .footer {
+        margin-top: 12px;
+        font-size: 0.75rem;
+        color: var(--text-soft);
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        flex-wrap: wrap;
+        opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <div class="card">
+
+        <!-- Header -->
+        <header class="header">
+            <div class="title-wrap">
+            <h1>
+                AI-Driven Trade Communication Assistant
+                <span class="title-pill">Prototype UI</span>
+            </h1>
+            <p class="subtitle">
+                Enter customer inquiries or order information to generate business emails,
+                trade documents, and risk assessments.
+            </p>
+            </div>
+            <div class="status-pill">
+            ● Local dev · Backend expected at 127.0.0.1:8000
+            </div>
+        </header>
+
+        <!-- Layout -->
+        <main class="main-layout">
+
+            <!-- LEFT: Input Panel -->
+            <section class="panel">
+
+            <div class="panel-header">
+                <div class="panel-title">
+                Input Console
+                <span class="badge">Client → Backend → LLM</span>
+                </div>
+
+                <div class="tabs" id="modeTabs">
+                <button class="tab-btn active" data-mode="communication">Communication</button>
+                <button class="tab-btn" data-mode="document">Document</button>
+                <button class="tab-btn" data-mode="risk">Risk</button>
+                </div>
+            </div>
+
+            <p class="subtitle" style="font-size:0.78rem; margin-top:-4px;">
+                Select mode, fill in fields, then click “Send Request”.
+            </p>
+
+            <!-- Communication Mode -->
+            <div id="mode-communication">
+                <label>Customer Message</label>
+                <textarea id="commMessage"
+                placeholder="Example: Hello, we are interested in your LED panel lights. Could you provide pricing and MOQ for export to France?"></textarea>
+
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                <div style="flex:1;">
+                    <label>Language</label>
+                    <select id="commLanguage">
+                    <option value="auto">Auto Detect</option>
+                    <option value="en">English</option>
+                    </select>
+                </div>
+
+                <div style="flex:1;">
+                    <label>Target Region</label>
+                    <select id="commRegion">
+                    <option value="EU">EU</option>
+                    <option value="US">US</option>
+                    <option value="ME">Middle East</option>
+                    <option value="ASIA">Asia</option>
+                    </select>
+                </div>
+
+                <div style="flex:1;">
+                    <label>Tone</label>
+                    <select id="commTone">
+                    <option value="formal">Formal</option>
+                    <option value="neutral">Neutral</option>
+                    <option value="friendly">Friendly</option>
+                    </select>
+                </div>
+                </div>
+            </div>
+
+            <!-- Document Mode -->
+            <div id="mode-document" style="display:none;">
+                <label>Document Type</label>
+                <select id="docType">
+                <option value="proforma_invoice">Proforma Invoice</option>
+                <option value="commercial_invoice">Commercial Invoice</option>
+                <option value="quotation">Quotation</option>
+                </select>
+
+                <label>Currency</label>
+                <select id="docCurrency">
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="CNY">CNY</option>
+                </select>
+
+                <label>Seller</label>
+                <input id="docSeller" placeholder="e.g. XYZ Lighting Co., Ltd." />
+
+                <label>Buyer</label>
+                <input id="docBuyer" placeholder="e.g. ABC Import GmbH" />
+
+                <label>Product Description</label>
+                <input id="docProduct" placeholder="e.g. LED Panel Light 600x600" />
+
+                <div style="display:flex; gap:8px;">
+                <div style="flex:1;">
+                    <label>Quantity</label>
+                    <input type="number" id="docQuantity" placeholder="500" />
+                </div>
+                <div style="flex:1;">
+                    <label>Unit Price</label>
+                    <input type="number" id="docUnitPrice" placeholder="12.5" step="0.01" />
+                </div>
+                </div>
+
+                <label>Incoterm</label>
+                <input id="docIncoterm" placeholder="e.g. FOB Shanghai / CIF Hamburg" />
+
+                <label>Payment Term</label>
+                <input id="docPaymentTerm" placeholder="e.g. T/T 30% deposit..." />
+
+                <label>Additional Notes (optional)</label>
+                <textarea id="docExtra"></textarea>
+            </div>
+
+            <!-- Risk Mode -->
+            <div id="mode-risk" style="display:none;">
+                <label>Message / Scenario Description</label>
+                <textarea id="riskMessage"
+                placeholder="Example: Customer requests shipment to a third country warehouse and wants to pay via a personal account..."></textarea>
+
+                <label>Customer Country (optional)</label>
+                <input id="riskCountry" placeholder="e.g. Germany / UAE / Unknown" />
+
+                <label>Transaction Type</label>
+                <select id="riskTransactionType">
+                <option value="export">Export</option>
+                <option value="import">Import</option>
+                <option value="other">Other</option>
+                </select>
+            </div>
+
+            <div style="margin-top:10px; display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn" id="btnClear">Clear</button>
+                <button class="btn btn-primary" id="btnSubmit">Send Request</button>
+            </div>
+            </section>
+
+            <!-- RIGHT: Output Panel -->
+            <section class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Response</div>
+            </div>
+
+            <div class="response-body" id="responseBody">
+                The AI response will appear here.
+            </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <span>Frontend: HTML + Vanilla JS</span>
+            <span>Backend expected endpoints: /api/chat · /api/document · /api/risk</span>
+        </footer>
+        </div>
+    </div>
+    <script src = "index.js">
+
+    </script>
+</body>
+</html>

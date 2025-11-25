@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+venv/
+
+# FastAPI log
+*.log
+
+# Node / React
+node_modules/
+dist/
+build/
+*.cache
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Data folder (don't track large files or datasets)
+data/
+!data/README.md
+
+# Documents
+docs/report/*.pdf
+docs/report/*.docx
+docs/proposal/*.pdf
+
+# OS / system files
+.DS_Store
+Thumbs.db
+
+# OneDrive sync files
+.*.tmp
+~$*
+
