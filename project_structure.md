@@ -75,7 +75,7 @@ Individual dissertation/
 |  |- finetuned/                # 微调后的模型信息、配置
 |  |- README.md
 |
-|- .gitignore                   # 如果你用 Git，可以放这里
+|- .gitignore                   # gitignore file
 |- README.md                    # 整个项目的说明（项目介绍、如何运行）
 |- project_config_example.json  # 配置模板（例如 API key 填在本地 config 里）
 |- project_structure            # This file
