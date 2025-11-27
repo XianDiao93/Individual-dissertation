@@ -1,6 +1,6 @@
 Individual dissertation/
-|- run_app.py                   # initiator of the website
 |- backend/                     # backend (Python + FastAPI/Flask)
+|  |- run_backend.py            # launcher of backend
 |  |- main.py                   # main port
 |  |- app/
 |  |  |- __init__.py
