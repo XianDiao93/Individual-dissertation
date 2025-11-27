@@ -1,5 +1,7 @@
 Individual dissertation/
+|- run_app.py                   # initiator of the website
 |- backend/                     # backend (Python + FastAPI/Flask)
+|  |- main.py                   # main port
 |  |- app/
 |  |  |- __init__.py
 |  |  |- main.py                # 主入口：启动 API 的文件

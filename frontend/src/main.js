@@ -1,3 +1,9 @@
+import {
+  callCommunicationAPI,
+  callDocumentAPI,
+  callRiskAPI,
+} from "./api.js";
+
 const API_BASE_URL = "http://127.0.0.1:8000";
 
 const responseBody = document.getElementById("responseBody");
@@ -34,18 +40,41 @@ async function callBackend() {
         let endpoint = "";
         let payload = {};
 
+        // communication branch
         if (currentMode === "communication") {
-            alert("function have not been implemented yet");
-            return;
-            endpoint = "/api/chat";
-            payload = {
-                message: document.getElementById("commMessage").value,
-                language: document.getElementById("commLanguage").value,
-                region: document.getElementById("commRegion").value,
-                tone: document.getElementById("commTone").value,
-            };
+            // Collect inputs
+            const message = document.getElementById("commMessage").value.trim();
+            const language = document.getElementById("commLanguage").value;
+            const region = document.getElementById("commRegion").value;
+            const tone = document.getElementById("commTone").value;
+
+            // Basic validation (optional)
+            if (!message) {
+                responseBody.textContent = "Please enter a message before sending.";
+                return;
+            }
+
+            // Call backend through api.js
+            try {
+                const data = await callCommunicationAPI({
+                    message,
+                    language,
+                    region,
+                    tone,
+                });
+
+                // Display the response from backend
+                responseBody.textContent =
+                    data.reply || JSON.stringify(data, null, 2);
+            } catch (err) {
+                responseBody.textContent = "Error: " + err.message;
+            }
+
+            return; // end communication branch
         }
 
+
+        // document branch
         else if (currentMode === "document") {
             alert("function have not been implemented yet");
             return;
@@ -64,6 +93,7 @@ async function callBackend() {
             };
         }
 
+        // risk branch
         else if (currentMode === "risk") {
             alert("function have not been implemented yet");
             return;
