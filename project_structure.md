@@ -1,7 +1,6 @@
 Individual dissertation/
 |- backend/                     # backend (Python + FastAPI/Flask)
 |  |- run_backend.py            # launcher of backend
-|  |- main.py                   # main port
 |  |- app/
 |  |  |- __init__.py
 |  |  |- main.py                # 主入口：启动 API 的文件
@@ -19,8 +18,8 @@ Individual dissertation/
 |  |  |  |- risk.py    # 风险识别逻辑
 |  |  |- models/                # Pydantic 数据模型
 |  |  |  |- __init__.py
-|  |  |  |- chat_model.py
-|  |  |  |- document_model.py
+|  |  |  |- com_model.py
+|  |  |  |- doc_model.py
 |  |  |  |- risk_model.py
 |  |  |- utils/                 # 工具函数
 |  |     |- __init__.py
