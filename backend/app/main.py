@@ -125,10 +125,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers.com_router import router as com_router
-# future:
-# from app.routers.doc_router import router as doc_router
-# from app.routers.risk_router import router as risk_router
-
 
 app = FastAPI(
     title="AI Trade Assistant Backend",
@@ -144,10 +140,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 现在只启用 communication 的 API
+# ⭐ 这里 prefix="/api"
 app.include_router(com_router, prefix="/api", tags=["communication"])
 
 
 @app.get("/")
 async def root():
-    return {"status": "ok"}
+    return {"status": "ok", "message": "Backend is running"}

@@ -42,35 +42,29 @@ async function callBackend() {
 
         // communication branch
         if (currentMode === "communication") {
-            // Collect inputs
             const message = document.getElementById("commMessage").value.trim();
             const language = document.getElementById("commLanguage").value;
             const region = document.getElementById("commRegion").value;
             const tone = document.getElementById("commTone").value;
+            const replyForm = document.getElementById("commReplyForm").value;
 
-            // Basic validation (optional)
             if (!message) {
                 responseBody.textContent = "Please enter a message before sending.";
                 return;
             }
 
-            // Call backend through api.js
-            try {
-                const data = await callCommunicationAPI({
-                    message,
-                    language,
-                    region,
-                    tone,
-                });
+            const data = await callCommunicationAPI({
+                message,
+                language,
+                region,
+                tone,
+                replyForm,
+            });
 
-                // Display the response from backend
-                responseBody.textContent =
-                    data.reply || JSON.stringify(data, null, 2);
-            } catch (err) {
-                responseBody.textContent = "Error: " + err.message;
-            }
+            responseBody.textContent =
+                data.reply || JSON.stringify(data, null, 2);
 
-            return; // end communication branch
+            return;
         }
 
 

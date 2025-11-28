@@ -37,14 +37,16 @@ async function callApi(endpoint, payload) {
  * Call communication (business email) endpoint.
  * Expected backend route: POST /api/chat
  */
-export function callCommunicationAPI({ message, language, region, tone }) {
+export function callCommunicationAPI({ message, language, region, tone, replyForm }) {
     return callApi("/api/chat", {
         message,
         language,
         region,
         tone,
+        reply_form: replyForm,   // 后端用 snake_case: reply_form
     });
 }
+
 
 /**
  * Call document-generation endpoint.
