@@ -3,6 +3,7 @@ import os
 from typing import Optional
 
 from openai import OpenAI
+from app.models.doc_model import BaseDocumentData, DocumentType
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -96,3 +97,101 @@ def generate_business_reply(
         reply_text = str(response)
 
     return reply_text
+
+def generate_document_text(
+    data: BaseDocumentData,
+    template_text: Optional[str] = None,
+    model: str = "gpt-4o-mini",
+) -> str:
+    """
+    Use the LLM to generate the main body text of a trade document.
+
+    The model receives:
+      - document_type (sales_contract / quotation / product_manual)
+      - core structured fields (seller, buyer, product, price, terms, etc.)
+      - optional template_text as a structural / style reference
+
+    It should output a ready-to-use document body in plain text.
+    """
+
+    # High-level instruction depending on document type
+    if data.document_type == DocumentType.sales_contract:
+        doc_purpose = (
+            "Draft a clear and professional international sales contract between seller and buyer. "
+            "Use numbered clauses where appropriate."
+        )
+    elif data.document_type == DocumentType.quotation:
+        doc_purpose = (
+            "Draft a clear and professional quotation for the buyer, with pricing, terms and validity. "
+            "You may use simple headings but keep it concise."
+        )
+    else:
+        # product_manual
+        doc_purpose = (
+            "Draft a structured product manual / instruction document. "
+            "It should have clear sections, such as Overview, Parts and functions, "
+            "Usage, Safety instructions and Warranty."
+        )
+
+    system_prompt = (
+        "You are an AI assistant helping SMEs with international trade documentation.\n\n"
+        "Your task is to generate high-quality, professional text for trade documents "
+        "(contracts, quotations, product manuals). You must:\n"
+        "- Use clear, formal business language.\n"
+        "- Organise the content with logical sections and paragraphs.\n"
+        "- Do NOT add any placeholder like 'Lorem ipsum'; always use meaningful text.\n\n"
+        f"Specific goal for this document:\n{doc_purpose}\n\n"
+        "If a reference template is provided, you should:\n"
+        "- Follow its overall structure and headings as much as reasonable.\n"
+        "- Fill in any placeholders with the given data.\n"
+        "- Improve clarity and consistency where needed.\n"
+    )
+
+    # Build a compact description of the structured data
+    meta_lines = [
+        f"Document type: {data.document_type.value}",
+        f"Seller: {data.seller_name}",
+        f"Buyer: {data.buyer_name}",
+        f"Product: {data.product}",
+        f"Quantity: {data.quantity}",
+        f"Unit price: {data.unit_price} {data.currency}",
+        f"Incoterm: {data.incoterm or 'N/A'}",
+        f"Payment term: {data.payment_term or 'N/A'}",
+        f"Extra notes: {data.extra_notes or 'N/A'}",
+    ]
+    meta_str = "\n".join(meta_lines)
+
+    user_content = (
+        "Here is the structured data for the document:\n"
+        "---------------------------------------------\n"
+        f"{meta_str}\n"
+        "---------------------------------------------\n\n"
+    )
+
+    if template_text:
+        user_content += (
+            "Here is the optional reference template (you may follow its structure and wording style):\n"
+            "---------------------------------------------\n"
+            f"{template_text}\n"
+            "---------------------------------------------\n\n"
+        )
+
+    user_content += (
+        "Now generate the full text of the document. "
+        "Do not include any explanations about what you are doing; "
+        "just output the document content ready to be placed into a PDF."
+    )
+
+    response = client.responses.create(
+        model=model,
+        input=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content},
+        ],
+    )
+
+    doc_text: Optional[str] = getattr(response, "output_text", None)
+    if not doc_text:
+        doc_text = str(response)
+
+    return doc_text

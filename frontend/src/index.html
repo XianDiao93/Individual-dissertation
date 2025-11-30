@@ -325,52 +325,102 @@
 
 
 
-            <!-- Document Mode -->
-            <div id="mode-document" style="display:none;">
-                <label>Document Type</label>
-                <select id="docType">
-                <option value="proforma_invoice">Proforma Invoice</option>
-                <option value="commercial_invoice">Commercial Invoice</option>
-                <option value="quotation">Quotation</option>
-                </select>
+            <!-- Document mode -->
+            <section id="mode-document" class="mode-panel" style="display: none;">
+                <h2>Document generation</h2>
 
-                <label>Currency</label>
-                <select id="docCurrency">
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
-                <option value="CNY">CNY</option>
-                </select>
+                <!-- Document type + currency -->
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <div style="flex:1;">
+                    <label for="docType">Document type</label>
+                    <select id="docType">
+                        <option value="sales_contract">Sales contract</option>
+                        <option value="quotation">Quotation</option>
+                        <option value="product_manual">Product manual / instruction</option>
+                    </select>
+                    </div>
 
-                <label>Seller</label>
-                <input id="docSeller" placeholder="e.g. XYZ Lighting Co., Ltd." />
-
-                <label>Buyer</label>
-                <input id="docBuyer" placeholder="e.g. ABC Import GmbH" />
-
-                <label>Product Description</label>
-                <input id="docProduct" placeholder="e.g. LED Panel Light 600x600" />
-
-                <div style="display:flex; gap:8px;">
-                <div style="flex:1;">
-                    <label>Quantity</label>
-                    <input type="number" id="docQuantity" placeholder="500" />
-                </div>
-                <div style="flex:1;">
-                    <label>Unit Price</label>
-                    <input type="number" id="docUnitPrice" placeholder="12.5" step="0.01" />
-                </div>
+                    <div style="flex:1;">
+                    <label for="docCurrency">Currency</label>
+                    <select id="docCurrency">
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                        <option value="CNY">CNY</option>
+                    </select>
+                    </div>
                 </div>
 
-                <label>Incoterm</label>
-                <input id="docIncoterm" placeholder="e.g. FOB Shanghai / CIF Hamburg" />
+                <!-- Parties -->
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <div style="flex:1;">
+                        <label for="docSeller">Seller / Supplier</label>
+                        <input id="docSeller" type="text" placeholder="e.g. XYZ Lighting Co., Ltd." />
+                    </div>
+                    <div style="flex:1;">
+                        <label for="docBuyer">Buyer / Customer</label>
+                        <input id="docBuyer" type="text" placeholder="e.g. ABC Import GmbH" />
+                    </div>
+                </div>
 
-                <label>Payment Term</label>
-                <input id="docPaymentTerm" placeholder="e.g. T/T 30% deposit..." />
+                <!-- Product & commercial terms -->
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <div style="flex:2;">
+                        <label for="docProduct">Product / service</label>
+                        <input id="docProduct" type="text" placeholder="e.g. LED panel light 600x600, 40W" />
+                    </div>
+                    <div style="flex:1;">
+                        <label for="docQuantity">Quantity</label>
+                        <input id="docQuantity" type="number" min="0" />
+                    </div>
+                    <div style="flex:1;">
+                        <label for="docUnitPrice">Unit price</label>
+                        <input id="docUnitPrice" type="number" min="0" step="0.01" />
+                    </div>
+                </div>
 
-                <label>Additional Notes (optional)</label>
-                <textarea id="docExtra"></textarea>
-            </div>
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <div style="flex:1;">
+                        <label for="docIncoterm">Incoterm</label>
+                        <input id="docIncoterm" type="text" placeholder="e.g. FOB Shanghai / CIF Hamburg" />
+                    </div>
+                    <div style="flex:1;">
+                        <label for="docPaymentTerm">Payment term</label>
+                        <input id="docPaymentTerm" type="text" placeholder="e.g. T/T 30% deposit, 70% before shipment" />
+                    </div>
+                </div>
+
+                <!-- Template file for contract / quotation -->
+                <div id="docTemplateGroup" style="margin-bottom:8px;">
+                    <label for="docTemplate">
+                        Template file (optional, for contracts / quotations)
+                        <span style="font-size: 0.8em; color:#666;">e.g. text / docx / template file</span>
+                    </label>
+                    <input id="docTemplate" type="file" />
+                </div>
+
+                <!-- Product image for manuals -->
+                <div id="docImageGroup" style="margin-bottom:8px; display:none;">
+                    <label for="docImage">
+                        Product image (for manuals)
+                        <span style="font-size: 0.8em; color:#666;">Image showing the product and its parts</span>
+                    </label>
+                    <input id="docImage" type="file" accept="image/*" />
+                </div>
+
+                <!-- Extra notes / technical details -->
+                <div style="margin-bottom:8px;">
+                    <label for="docExtra">
+                    Extra notes / technical details / instructions
+                    <span style="font-size: 0.8em; color: #666;">
+                        For manuals, describe each part and its function here; for contracts/quotations, add special terms.
+                    </span>
+                    </label>
+                    <textarea id="docExtra" rows="5"
+                    placeholder="E.g. part A = power switch, part B = indicator, safety instructions, warranty terms, delivery time, etc."></textarea>
+                </div>
+            </section>
+
+
 
             <!-- Risk Mode -->
             <div id="mode-risk" style="display:none;">

@@ -125,6 +125,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers.com_router import router as com_router
+from app.routers.doc_router import router as doc_router
 
 app = FastAPI(
     title="AI Trade Assistant Backend",
@@ -132,16 +133,23 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# ⭐ 显式写出允许的前端来源
+origins = [
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],      # 允许所有方法（GET/POST/OPTIONS 等）
+    allow_headers=["*"],      # 允许任意请求头
+    expose_headers=["X-Doc-Description"],  # ⭐ 允许前端读取自定义响应头
 )
 
-# ⭐ 这里 prefix="/api"
 app.include_router(com_router, prefix="/api", tags=["communication"])
+app.include_router(doc_router, prefix="/api", tags=["document"])
 
 
 @app.get("/")
