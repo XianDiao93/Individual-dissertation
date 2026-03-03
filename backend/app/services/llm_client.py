@@ -11,7 +11,7 @@ from app.config import CHAT_BASIC_PROMPT_PATH
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-***REMOVED***
+if not OPENAI_API_KEY:
     raise RuntimeError(
         "OPENAI_API_KEY environment variable is not set. "
         "Please set it before starting the backend."
