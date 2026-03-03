@@ -12,9 +12,7 @@
     --transition-fast: 0.18s ease-out;
 }
 
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
     margin: 0;
@@ -25,10 +23,210 @@ body {
     min-height: 100vh;
 }
 
+/* ===== Login (simple) ===== */
+.login-container{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+}
+.login-card{
+    width:100%;
+    max-width:420px;
+    background: var(--bg-elevated);
+    border:1px solid var(--border);
+    border-radius: 18px;
+    padding:24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+}
+.login-card h2{ margin:0 0 14px; }
+
+/* ===== NEW: Workspace shell ===== */
+.workspace-shell{
+    min-height:100vh;
+    display:flex;
+}
+
+/* Sidebar */
+.sidebar{
+    width: 280px;
+    border-right: 1px solid var(--border);
+    background: #fff;
+    display:flex;
+    flex-direction:column;
+    padding: 14px;
+    gap: 14px;
+}
+
+.sidebar-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 10px;
+}
+
+.sidebar-btn{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    border:1px solid var(--border);
+    background: var(--accent-soft);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor:pointer;
+    transition: all var(--transition-fast);
+}
+.sidebar-btn:hover{
+    transform: translateY(-1px);
+    border-color: rgba(37,99,235,0.28);
+}
+.dot{
+    width:10px;
+    height:10px;
+    border-radius:999px;
+    background: var(--accent);
+    display:inline-block;
+}
+
+.sidebar-section{
+    display:flex;
+    flex-direction:column;
+    gap: 10px;
+}
+
+.sidebar-section-title{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size: 0.8rem;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.sidebar-hint{
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: #f8fafc;
+    color: var(--text-soft);
+}
+
+.sidebar-empty{
+    font-size: 0.85rem;
+    color: var(--text-soft);
+    padding: 10px 8px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px dashed var(--border);
+}
+
+.sidebar-list{
+    display:flex;
+    flex-direction:column;
+    gap: 6px;
+}
+
+.sidebar-item{
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px 10px;
+    cursor:pointer;
+    transition: all var(--transition-fast);
+}
+.sidebar-item:hover{
+    border-color: rgba(37,99,235,0.28);
+    background: rgba(37,99,235,0.03);
+}
+.sidebar-item .t{
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+.sidebar-item .m{
+    font-size: 0.8rem;
+    color: var(--text-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-bottom{
+    margin-top:auto;
+    display:flex;
+    flex-direction:column;
+    gap: 10px;
+}
+.sidebar-logout{
+    width:100%;
+    border: 1px solid var(--border);
+    background:#fff;
+}
+.sidebar-logout:hover{
+    border-color: rgba(220,38,38,0.3);
+}
+.sidebar-footnote{
+    font-size: 0.78rem;
+    color: var(--text-soft);
+}
+
+/* Main area */
+.workspace-main{
+    flex:1;
+    padding: 18px 18px 30px;
+    overflow:auto;
+}
+
+/* Views */
+.view{
+    width:100%;
+}
+
+.view-card{
+    max-width: 980px;
+    margin: 24px auto;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 22px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+}
+.view-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 12px;
+}
+.view-head h2{
+    margin:0;
+}
+
+.kv{
+    margin-top: 12px;
+    display:flex;
+    flex-direction:column;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 14px;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+}
+.k{
+    color: var(--text-soft);
+    font-size: 0.85rem;
+    margin-right: 6px;
+}
+
+/* ===== Existing app styles (kept) ===== */
 .app-shell {
     width: 100%;
     max-width: 1200px;
-    padding: 40px 20px;
+    padding: 20px 10px;
     margin: auto;
 }
 
@@ -84,6 +282,12 @@ body {
 }
 
 @media (max-width: 900px) {
+    .workspace-shell{ flex-direction:column; }
+    .sidebar{
+        width:100%;
+        border-right:none;
+        border-bottom:1px solid var(--border);
+    }
     .main-layout {
         grid-template-columns: 1fr;
     }
@@ -149,8 +353,8 @@ select {
 }
 
 textarea {
-    min-height: 120px;
-    resize: vertical;
+  min-height: 120px;
+  resize: vertical;
 }
 
 .btn {

@@ -11,3 +11,5 @@ SYSTEM_PROMPTS_DIR = PROJECT_ROOT / "backend" / "app" / "database" / "system_pro
 CHAT_BASIC_PROMPT_PATH = SYSTEM_PROMPTS_DIR / "chat_basic.json"
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+***REMOVED***
+***REMOVED***

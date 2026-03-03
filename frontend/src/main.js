@@ -1,17 +1,17 @@
-import {
-  callCommunicationAPI,
-  callDocumentAPI
-} from "./api.js";
+import { callCommunicationAPI } from "./api.js";
 
-const logoutBtn = document.getElementById("logoutBtn");
+const API_BASE_URL = "http://127.0.0.1:8000";
 
+/* =========================
+   DOM refs
+========================= */
 const loginScreen = document.getElementById("loginScreen");
-const appShell = document.getElementById("appShell");
+const workspaceShell = document.getElementById("workspaceShell");
 
 const loginBtn = document.getElementById("loginBtn");
 const loginError = document.getElementById("loginError");
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const logoutBtn = document.getElementById("logoutBtn");
 
 const responseBody = document.getElementById("responseBody");
 const btnSubmit = document.getElementById("btnSubmit");
@@ -24,6 +24,136 @@ const docTypeSelect = document.getElementById("docType");
 const docTemplateGroup = document.getElementById("docTemplateGroup");
 const docImageGroup = document.getElementById("docImageGroup");
 
+// Sidebar
+const navProfileBtn = document.getElementById("navProfileBtn");
+const emailsListEl = document.getElementById("emailsList");
+const emailsEmptyEl = document.getElementById("emailsEmpty");
+const unarchivedCountEl = document.getElementById("unarchivedCount");
+
+// Views
+const viewHome = document.getElementById("view-home");
+const viewProfile = document.getElementById("view-profile");
+const viewEmailDetail = document.getElementById("view-email-detail");
+
+const profileBackBtn = document.getElementById("profileBackBtn");
+const emailDetailBackBtn = document.getElementById("emailDetailBackBtn");
+
+// Email detail fields
+const emailDetailTitle = document.getElementById("emailDetailTitle");
+const emailDetailFrom = document.getElementById("emailDetailFrom");
+const emailDetailCustomerType = document.getElementById("emailDetailCustomerType");
+const emailDetailFiles = document.getElementById("emailDetailFiles");
+const emailDetailRisks = document.getElementById("emailDetailRisks");
+
+/* =========================
+   Simple view routing
+========================= */
+let currentView = "home"; // "home" | "profile" | "emailDetail"
+let selectedEmailId = null;
+
+function showView(viewName) {
+  currentView = viewName;
+
+  viewHome.style.display = viewName === "home" ? "block" : "none";
+  viewProfile.style.display = viewName === "profile" ? "block" : "none";
+  viewEmailDetail.style.display = viewName === "emailDetail" ? "block" : "none";
+}
+
+/* =========================
+   Sidebar data (local only)
+   Later you can swap to backend.
+========================= */
+const EMAILS_KEY = "unarchived_emails_v1";
+
+function seedEmailsIfEmpty() {
+    const raw = localStorage.getItem(EMAILS_KEY);
+    if (raw) return;
+
+    const demo = [
+        {
+            id: "em_1001",
+            subject: "Inquiry about LED panel lights (MOQ & lead time)",
+            from: "buyer01@example.com",
+            customer_type: "New buyer",
+            files: ["spec_sheet.pdf", "catalog_2026.pdf"],
+            risks: ["Sanctions: none", "Payment: unknown", "Region: EU"],
+        },
+        {
+            id: "em_1002",
+            subject: "Request for quotation: 10,000 units FOB Shanghai",
+            from: "procurement@demo-import.com",
+            customer_type: "Potential distributor",
+            files: ["rfq.xlsx"],
+            risks: ["Payment: T/T requested", "Delivery: tight schedule"],
+        },
+    ];
+
+    localStorage.setItem(EMAILS_KEY, JSON.stringify(demo));
+}
+
+function getEmails() {
+    try {
+        return JSON.parse(localStorage.getItem(EMAILS_KEY) || "[]");
+    } catch {
+        return [];
+    }
+}
+
+function renderEmailsList() {
+    const emails = getEmails();
+
+    unarchivedCountEl.textContent = String(emails.length);
+
+    emailsListEl.innerHTML = "";
+
+    if (!emails.length) {
+        emailsEmptyEl.style.display = "block";
+        return;
+    }
+
+    emailsEmptyEl.style.display = "none";
+
+    for (const e of emails) {
+        const item = document.createElement("div");
+        item.className = "sidebar-item";
+        item.dataset.emailId = e.id;
+
+        const title = document.createElement("div");
+        title.className = "t";
+        title.textContent = e.subject || "(No subject)";
+
+        const meta = document.createElement("div");
+        meta.className = "m";
+        meta.textContent = `${e.from || "-"} · ${e.customer_type || "-"}`;
+
+        item.appendChild(title);
+        item.appendChild(meta);
+
+        item.addEventListener("click", () => openEmailDetail(e.id));
+
+        emailsListEl.appendChild(item);
+    }
+}
+
+function openEmailDetail(emailId) {
+    const emails = getEmails();
+    const found = emails.find(x => x.id === emailId);
+    if (!found) return;
+
+    selectedEmailId = emailId;
+
+    emailDetailTitle.textContent = found.subject || "Email";
+    emailDetailFrom.textContent = found.from || "-";
+    emailDetailCustomerType.textContent = found.customer_type || "-";
+    emailDetailFiles.textContent = (found.files && found.files.length) ? found.files.join(", ") : "-";
+    emailDetailRisks.textContent = (found.risks && found.risks.length) ? found.risks.join(" · ") : "-";
+
+    showView("emailDetail");
+}
+
+/* =========================
+   Existing: docType visibility
+========================= */
 if (docTypeSelect) {
     const updateDocFieldsVisibility = () => {
         const t = docTypeSelect.value;
@@ -40,15 +170,15 @@ if (docTypeSelect) {
     };
 
     docTypeSelect.addEventListener("change", updateDocFieldsVisibility);
-    updateDocFieldsVisibility(); // initialize
+    updateDocFieldsVisibility();
 }
 
-
-// Mode switching
+/* =========================
+   Existing: Mode switching
+========================= */
 tabs.forEach(tab => {
     tab.addEventListener("click", () => {
         const mode = tab.dataset.mode;
-
         if (mode === currentMode) return;
 
         currentMode = mode;
@@ -61,16 +191,15 @@ tabs.forEach(tab => {
     });
 });
 
-// Backend call
+/* =========================
+   Existing: Backend call
+========================= */
 async function callBackend() {
     btnSubmit.disabled = true;
     btnSubmit.textContent = "Processing...";
 
     try {
-        let endpoint = "";
-        let payload = {};
-
-        // communication branch
+        // communication
         if (currentMode === "communication") {
             const message = document.getElementById("commMessage").value.trim();
             const language = document.getElementById("commLanguage").value;
@@ -91,14 +220,12 @@ async function callBackend() {
                 replyForm,
             });
 
-            responseBody.textContent =
-                data.reply || JSON.stringify(data, null, 2);
-
+            responseBody.textContent = data.reply || JSON.stringify(data, null, 2);
             return;
         }
 
-        // document branch
-        else if (currentMode === "document") {
+        // document (pdf)
+        if (currentMode === "document") {
             const docType = document.getElementById("docType").value;
             const currency = document.getElementById("docCurrency").value;
             const seller = document.getElementById("docSeller").value;
@@ -139,7 +266,7 @@ async function callBackend() {
             try {
                 const res = await fetch(API_BASE_URL + "/api/document/pdf", {
                     method: "POST",
-                    body: formData,          // ❗❗ 不要手动写 Content-Type
+                    body: formData,
                 });
 
                 if (!res.ok) {
@@ -165,20 +292,8 @@ async function callBackend() {
                 responseBody.textContent = "Error while generating PDF: " + err.message;
             }
 
-            return; // ❗ 记得 return，防止落到后面的 JSON fetch
+            return;
         }
-
-    const res = await fetch(API_BASE_URL + endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-    });
-
-    const data = await res.json();
-    responseBody.textContent =
-        data.reply ||
-        data.document_text ||
-        JSON.stringify(data, null, 2);
 
     } catch (err) {
         responseBody.textContent = "Error: " + err.message;
@@ -190,21 +305,23 @@ async function callBackend() {
 
 btnSubmit.addEventListener("click", callBackend);
 
-// Clear inputs
+/* =========================
+   Existing: Clear inputs
+========================= */
 btnClear.addEventListener("click", () => {
     if (currentMode === "communication") {
         document.getElementById("commMessage").value = "";
     }
     if (currentMode === "document") {
         [
-        "docSeller",
-        "docBuyer",
-        "docProduct",
-        "docQuantity",
-        "docUnitPrice",
-        "docIncoterm",
-        "docPaymentTerm",
-        "docExtra"
+            "docSeller",
+            "docBuyer",
+            "docProduct",
+            "docQuantity",
+            "docUnitPrice",
+            "docIncoterm",
+            "docPaymentTerm",
+            "docExtra"
         ].forEach(id => { document.getElementById(id).value = ""; });
 
         const tplInput = document.getElementById("docTemplate");
@@ -215,6 +332,9 @@ btnClear.addEventListener("click", () => {
     }
 });
 
+/* =========================
+   Auth: login/logout
+========================= */
 async function login() {
     const userName = document.getElementById("loginUserName").value.trim();
     const password = document.getElementById("loginPassword").value.trim();
@@ -225,63 +345,67 @@ async function login() {
     }
 
     try {
-        const res = await fetch("http://127.0.0.1:8000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-                user_name: userName,
-                password: password
-            })
+        const res = await fetch(API_BASE_URL + "/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_name: userName, password })
         });
 
         const data = await res.json();
 
         if (data.ok) {
-            // 登录成功
             localStorage.setItem("auth_token", data.token);
             loginError.textContent = "";
 
             loginScreen.style.display = "none";
-            appShell.style.display = "block";
+            workspaceShell.style.display = "flex";
+
+            seedEmailsIfEmpty();
+            renderEmailsList();
+            showView("home");
         } else {
-            // 登录失败
             loginError.textContent = "invalid login";
         }
-
-    } catch (err) {
+    } catch {
         loginError.textContent = "invalid login";
     }
 }
 
 loginBtn.addEventListener("click", login);
 
-window.addEventListener("DOMContentLoaded", () => {
-    const token = localStorage.getItem("auth_token");
-    if (token) {
-        loginScreen.style.display = "none";
-        appShell.style.display = "block";
-    }
-});
-
 function logout() {
     const token = localStorage.getItem("auth_token");
 
-    // 可选：通知后端
     if (token) {
-        fetch("http://127.0.0.1:8000/api/auth/logout", {
-            method: "POST",
-            headers: {
-                "Authorization": "Bearer " + token
-            }
+        fetch(API_BASE_URL + "/api/auth/logout", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token }
         }).catch(() => {});
     }
 
-    // 清除本地 token
     localStorage.removeItem("auth_token");
 
-    // 切换界面
-    appShell.style.display = "none";
+    workspaceShell.style.display = "none";
     loginScreen.style.display = "flex";
 }
 
 logoutBtn.addEventListener("click", logout);
+
+window.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+        loginScreen.style.display = "none";
+        workspaceShell.style.display = "flex";
+
+        seedEmailsIfEmpty();
+        renderEmailsList();
+        showView("home");
+    }
+});
+
+/* =========================
+   Sidebar navigation
+========================= */
+navProfileBtn.addEventListener("click", () => showView("profile"));
+profileBackBtn.addEventListener("click", () => showView("home"));
+emailDetailBackBtn.addEventListener("click", () => showView("home"));
