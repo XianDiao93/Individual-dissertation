@@ -1,10 +1,14 @@
 import subprocess
 import sys
+import os
 from pathlib import Path
+from app.config import OPENAI_API_KEY
 
 def main():
     backend_dir = Path(__file__).resolve().parent
     print("Working directory:", backend_dir)
+
+    os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
     cmd = [
         sys.executable, "-m", "uvicorn",

@@ -126,6 +126,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers.com_router import router as com_router
 from app.routers.doc_router import router as doc_router
+#from app.routers.risk_router import router as risk_router
+from app.routers.auth_router import router as auth_router
 
 app = FastAPI(
     title="AI Trade Assistant Backend",
@@ -150,6 +152,7 @@ app.add_middleware(
 
 app.include_router(com_router, prefix="/api", tags=["communication"])
 app.include_router(doc_router, prefix="/api", tags=["document"])
+app.include_router(auth_router, prefix="/api/auth", tags=["authentication"])
 
 
 @app.get("/")

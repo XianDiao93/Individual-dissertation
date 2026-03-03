@@ -1,8 +1,15 @@
 import {
   callCommunicationAPI,
-  callDocumentAPI,
-  callRiskAPI,
+  callDocumentAPI
 } from "./api.js";
+
+const logoutBtn = document.getElementById("logoutBtn");
+
+const loginScreen = document.getElementById("loginScreen");
+const appShell = document.getElementById("appShell");
+
+const loginBtn = document.getElementById("loginBtn");
+const loginError = document.getElementById("loginError");
 
 const API_BASE_URL = "http://127.0.0.1:8000";
 
@@ -18,22 +25,22 @@ const docTemplateGroup = document.getElementById("docTemplateGroup");
 const docImageGroup = document.getElementById("docImageGroup");
 
 if (docTypeSelect) {
-  const updateDocFieldsVisibility = () => {
-    const t = docTypeSelect.value;
-    if (t === "sales_contract" || t === "quotation") {
-      docTemplateGroup.style.display = "block";
-      docImageGroup.style.display = "none";
-    } else if (t === "product_manual") {
-      docTemplateGroup.style.display = "none";
-      docImageGroup.style.display = "block";
-    } else {
-      docTemplateGroup.style.display = "block";
-      docImageGroup.style.display = "none";
-    }
-  };
+    const updateDocFieldsVisibility = () => {
+        const t = docTypeSelect.value;
+        if (t === "sales_contract" || t === "quotation") {
+            docTemplateGroup.style.display = "block";
+            docImageGroup.style.display = "none";
+        } else if (t === "product_manual") {
+            docTemplateGroup.style.display = "none";
+            docImageGroup.style.display = "block";
+        } else {
+            docTemplateGroup.style.display = "block";
+            docImageGroup.style.display = "none";
+        }
+    };
 
-  docTypeSelect.addEventListener("change", updateDocFieldsVisibility);
-  updateDocFieldsVisibility(); // initialize
+    docTypeSelect.addEventListener("change", updateDocFieldsVisibility);
+    updateDocFieldsVisibility(); // initialize
 }
 
 
@@ -49,7 +56,6 @@ tabs.forEach(tab => {
 
         document.getElementById("mode-communication").style.display = mode === "communication" ? "block" : "none";
         document.getElementById("mode-document").style.display = mode === "document" ? "block" : "none";
-        document.getElementById("mode-risk").style.display = mode === "risk" ? "block" : "none";
 
         responseBody.textContent = "The AI response will appear here.";
     });
@@ -162,19 +168,6 @@ async function callBackend() {
             return; // ❗ 记得 return，防止落到后面的 JSON fetch
         }
 
-
-        // risk branch
-        else if (currentMode === "risk") {
-            alert("function have not been implemented yet");
-            return;
-            endpoint = "/api/risk";
-            payload = {
-                message: document.getElementById("riskMessage").value,
-                country: document.getElementById("riskCountry").value,
-                transaction_type: document.getElementById("riskTransactionType").value,
-            };
-        }
-
     const res = await fetch(API_BASE_URL + endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -220,8 +213,75 @@ btnClear.addEventListener("click", () => {
         const imgInput = document.getElementById("docImage");
         if (imgInput) imgInput.value = "";
     }
-    if (currentMode === "risk") {
-        document.getElementById("riskMessage").value = "";
-        document.getElementById("riskCountry").value = "";
+});
+
+async function login() {
+    const userName = document.getElementById("loginUserName").value.trim();
+    const password = document.getElementById("loginPassword").value.trim();
+
+    if (!userName || !password) {
+        loginError.textContent = "invalid login";
+        return;
+    }
+
+    try {
+        const res = await fetch("http://127.0.0.1:8000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+                user_name: userName,
+                password: password
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.ok) {
+            // 登录成功
+            localStorage.setItem("auth_token", data.token);
+            loginError.textContent = "";
+
+            loginScreen.style.display = "none";
+            appShell.style.display = "block";
+        } else {
+            // 登录失败
+            loginError.textContent = "invalid login";
+        }
+
+    } catch (err) {
+        loginError.textContent = "invalid login";
+    }
+}
+
+loginBtn.addEventListener("click", login);
+
+window.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem("auth_token");
+    if (token) {
+        loginScreen.style.display = "none";
+        appShell.style.display = "block";
     }
 });
+
+function logout() {
+    const token = localStorage.getItem("auth_token");
+
+    // 可选：通知后端
+    if (token) {
+        fetch("http://127.0.0.1:8000/api/auth/logout", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        }).catch(() => {});
+    }
+
+    // 清除本地 token
+    localStorage.removeItem("auth_token");
+
+    // 切换界面
+    appShell.style.display = "none";
+    loginScreen.style.display = "flex";
+}
+
+logoutBtn.addEventListener("click", logout);

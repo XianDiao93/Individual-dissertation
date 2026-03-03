@@ -1,9 +1,13 @@
 # backend/app/services/llm_client.py
+import json
 import os
+from pathlib import Path
 from typing import Optional
-
 from openai import OpenAI
+from functools import lru_cache
+
 from app.models.doc_model import BaseDocumentData, DocumentType
+from app.config import CHAT_BASIC_PROMPT_PATH
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -14,6 +18,13 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     )
 
 client = OpenAI(api_key=OPENAI_API_KEY)
+
+# load basic promts from database
+@lru_cache(maxsize=8)
+def _load_chat_prompt_bundle() -> dict:
+    path = Path(CHAT_BASIC_PROMPT_PATH)
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 def generate_business_reply(
@@ -34,47 +45,20 @@ def generate_business_reply(
     if reply_form_norm not in {"email", "chat"}:
         reply_form_norm = "email"
 
-    if reply_form_norm == "chat":
-        mode_description = (
-            "You are chatting with the user in a business context. "
-            "Provide a short, direct conversational reply, as in a live chat or "
-            "instant messaging tool. You may skip formal email headers and "
-            "sign-offs (no need for 'Dear ...' and 'Best regards')."
-        )
-        formatting_instructions = (
-            "- Keep the reply short (1–3 short paragraphs or a few sentences).\n"
-            "- You can use 'Hi' or no greeting at all if it feels natural.\n"
-            "- Do NOT include signatures or long closings."
-        )
-    else:
-        mode_description = (
-            "You are composing a full business email reply for the user. "
-            "Include an appropriate greeting and closing, and use a clear email structure."
-        )
-        formatting_instructions = (
-            "- Include a greeting (e.g. 'Dear ...').\n"
-            "- Use one or more paragraphs to answer the inquiry clearly.\n"
-            "- Finish with a polite closing (e.g. 'Best regards, ...')."
-        )
+    bundle = _load_chat_prompt_bundle()
 
-    system_prompt = (
-        "You are an AI assistant helping SMEs with international trade communication.\n\n"
-        f"{mode_description}\n\n"
-        "LANGUAGE HANDLING:\n"
-        "1. First, detect the language of the user's message.\n"
-        f"2. The requested output language is: '{language}'.\n"
-        "- If the requested language is 'auto', always reply in the detected input language.\n"
-        "- If the requested language is a specific language (e.g. 'en', 'zh') and it matches\n"
-        "  the detected language, reply in that language.\n"
-        "- If the requested language conflicts with the detected language, prioritise the\n"
-        "  detected input language and reply in that detected language.\n\n"
-        "REGION & TONE:\n"
-        f"- Target region: {region}. Adapt the style, politeness and phrasing to typical\n"
-        "  business communication practices in this region (e.g. EU/US/ME/ASIA).\n"
-        f"- Tone: {tone_str}. Make the reply consistent with this tone.\n\n"
-        "FORMATTING:\n"
-        f"{formatting_instructions}\n"
-        "- Do NOT explain what you are doing; just output the final text."
+    modes = bundle.get("modes", {})
+    mode_key = "chat" if reply_form_norm == "chat" else "email"
+    mode_cfg = modes.get(mode_key) or modes.get("email") or {}
+
+    system_template = bundle.get("system_template", "")
+
+    system_prompt = system_template.format(
+        mode_description=mode_cfg.get("mode_description", ""),
+        formatting_instructions=mode_cfg.get("formatting_instructions", ""),
+        language=language,
+        region=region,
+        tone_str=tone_str,
     )
 
     response = client.responses.create(

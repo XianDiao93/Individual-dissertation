@@ -77,15 +77,3 @@ export function callDocumentAPI({
         extra_notes,
     });
 }
-
-/**
- * Call risk-analysis endpoint.
- * Expected backend route: POST /api/risk
- */
-export function callRiskAPI({ message, country, transaction_type }) {
-    return callApi("/api/risk", {
-        message,
-        country,
-        transaction_type,
-    });
-}

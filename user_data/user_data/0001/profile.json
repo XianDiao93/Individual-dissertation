@@ -1,0 +1,11 @@
+[
+  {
+    "user_id": "0001",
+    "user_name": "Admin",
+    "password_hash": "pbkdf2_sha256$260000$l6j5xu36l6SyF3A-IB0z1Q$RqDbK9icq99yHNWc5v78x-Yw9jMTKSCPVRU40GODKnw",
+    "role": "admin",
+    "phone": null,
+    "email": null,
+    "name": null
+  }
+]
