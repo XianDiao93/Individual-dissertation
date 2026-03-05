@@ -396,3 +396,29 @@ textarea {
     justify-content: space-between;
     flex-wrap: wrap;
 }
+
+.view-actions{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+.btn-danger{
+  background: #ef4444;
+  color: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+.btn-danger:hover{
+  filter: brightness(0.95);
+}
+
+.mono-box {
+  white-space: pre-wrap;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+  padding: 12px;
+  min-height: 110px;
+  line-height: 1.45;
+}

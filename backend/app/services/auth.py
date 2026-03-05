@@ -59,7 +59,7 @@ def verify_password(password: str, stored: str) -> bool:
 
 @dataclass(frozen=True)
 class AuthUser:
-    user_id: str
+    uid: str
     user_name: str
     role: str
 
@@ -122,17 +122,17 @@ class AuthService:
 
         stored_hash = rec.get("password_hash")
         role = rec.get("role")
-        user_id = rec.get("user_id")
+        uid = rec.get("uid")
         stored_user_name = rec.get("user_name")
 
-        if not isinstance(stored_hash, str) or not isinstance(role, str) or not isinstance(user_id, str) or not isinstance(stored_user_name, str):
+        if not isinstance(stored_hash, str) or not isinstance(role, str) or not isinstance(uid, str) or not isinstance(stored_user_name, str):
             return {"ok": False, "error": "invalid_credentials"}
 
         if not verify_password(password, stored_hash):
             return {"ok": False, "error": "invalid_credentials"}
 
         token = secrets.token_urlsafe(32)
-        user = AuthUser(user_id=user_id, user_name=stored_user_name, role=role)
+        user = AuthUser(uid=uid, user_name=stored_user_name, role=role)
         self._sessions[token] = (user, int(time.time()))
 
         return {"ok": True, "token": token, "role": role, "user_name": stored_user_name}

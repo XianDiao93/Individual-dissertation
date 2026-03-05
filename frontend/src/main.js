@@ -1,4 +1,4 @@
-import { callCommunicationAPI } from "./api.js";
+import { callCommunicationAPI, getMyProfile } from "./api.js";
 
 const API_BASE_URL = "http://127.0.0.1:8000";
 
@@ -24,6 +24,9 @@ const docTypeSelect = document.getElementById("docType");
 const docTemplateGroup = document.getElementById("docTemplateGroup");
 const docImageGroup = document.getElementById("docImageGroup");
 
+const emailDetailBodyBox = document.getElementById("emailDetailBodyBox");
+const emailDetailReplyBox = document.getElementById("emailDetailReplyBox");
+
 // Sidebar
 const navProfileBtn = document.getElementById("navProfileBtn");
 const emailsListEl = document.getElementById("emailsList");
@@ -38,12 +41,46 @@ const viewEmailDetail = document.getElementById("view-email-detail");
 const profileBackBtn = document.getElementById("profileBackBtn");
 const emailDetailBackBtn = document.getElementById("emailDetailBackBtn");
 
-// Email detail fields
+// Email detail fields (existing placeholder ids)
 const emailDetailTitle = document.getElementById("emailDetailTitle");
 const emailDetailFrom = document.getElementById("emailDetailFrom");
 const emailDetailCustomerType = document.getElementById("emailDetailCustomerType");
 const emailDetailFiles = document.getElementById("emailDetailFiles");
 const emailDetailRisks = document.getElementById("emailDetailRisks");
+const emailDetailDeleteBtn = document.getElementById("emailDetailDeleteBtn");
+
+// Profile fields (if present in your index.html)
+const profileStatus = document.getElementById("profileStatus");
+const profileUid = document.getElementById("profileUid");
+const profileUserName = document.getElementById("profileUserName");
+const profileRole = document.getElementById("profileRole");
+const profileName = document.getElementById("profileName");
+const profileEmail = document.getElementById("profileEmail");
+const profilePhone = document.getElementById("profilePhone");
+
+/* =========================
+   Helpers
+========================= */
+function getToken() {
+    return localStorage.getItem("auth_token");
+}
+
+function authHeaders() {
+    const token = getToken();
+    return token ? { "Authorization": "Bearer " + token } : {};
+}
+
+async function fetchJson(url, options = {}) {
+    const res = await fetch(url, options);
+    if (!res.ok) {
+        let detail = "";
+        try { detail = await res.text(); } catch {}
+        const err = new Error(`Request failed with status ${res.status}` + (detail ? `: ${detail}` : ""));
+        err.status = res.status;
+        throw err;
+    }
+    return res.json();
+}
 
 /* =========================
    Simple view routing
@@ -52,103 +89,11 @@ let currentView = "home"; // "home" | "profile" | "emailDetail"
 let selectedEmailId = null;
 
 function showView(viewName) {
-  currentView = viewName;
+    currentView = viewName;
 
-  viewHome.style.display = viewName === "home" ? "block" : "none";
-  viewProfile.style.display = viewName === "profile" ? "block" : "none";
-  viewEmailDetail.style.display = viewName === "emailDetail" ? "block" : "none";
-}
-
-/* =========================
-   Sidebar data (local only)
-   Later you can swap to backend.
-========================= */
-const EMAILS_KEY = "unarchived_emails_v1";
-
-function seedEmailsIfEmpty() {
-    const raw = localStorage.getItem(EMAILS_KEY);
-    if (raw) return;
-
-    const demo = [
-        {
-            id: "em_1001",
-            subject: "Inquiry about LED panel lights (MOQ & lead time)",
-            from: "buyer01@example.com",
-            customer_type: "New buyer",
-            files: ["spec_sheet.pdf", "catalog_2026.pdf"],
-            risks: ["Sanctions: none", "Payment: unknown", "Region: EU"],
-        },
-        {
-            id: "em_1002",
-            subject: "Request for quotation: 10,000 units FOB Shanghai",
-            from: "procurement@demo-import.com",
-            customer_type: "Potential distributor",
-            files: ["rfq.xlsx"],
-            risks: ["Payment: T/T requested", "Delivery: tight schedule"],
-        },
-    ];
-
-    localStorage.setItem(EMAILS_KEY, JSON.stringify(demo));
-}
-
-function getEmails() {
-    try {
-        return JSON.parse(localStorage.getItem(EMAILS_KEY) || "[]");
-    } catch {
-        return [];
-    }
-}
-
-function renderEmailsList() {
-    const emails = getEmails();
-
-    unarchivedCountEl.textContent = String(emails.length);
-
-    emailsListEl.innerHTML = "";
-
-    if (!emails.length) {
-        emailsEmptyEl.style.display = "block";
-        return;
-    }
-
-    emailsEmptyEl.style.display = "none";
-
-    for (const e of emails) {
-        const item = document.createElement("div");
-        item.className = "sidebar-item";
-        item.dataset.emailId = e.id;
-
-        const title = document.createElement("div");
-        title.className = "t";
-        title.textContent = e.subject || "(No subject)";
-
-        const meta = document.createElement("div");
-        meta.className = "m";
-        meta.textContent = `${e.from || "-"} · ${e.customer_type || "-"}`;
-
-        item.appendChild(title);
-        item.appendChild(meta);
-
-        item.addEventListener("click", () => openEmailDetail(e.id));
-
-        emailsListEl.appendChild(item);
-    }
-}
-
-function openEmailDetail(emailId) {
-    const emails = getEmails();
-    const found = emails.find(x => x.id === emailId);
-    if (!found) return;
-
-    selectedEmailId = emailId;
-
-    emailDetailTitle.textContent = found.subject || "Email";
-    emailDetailFrom.textContent = found.from || "-";
-    emailDetailCustomerType.textContent = found.customer_type || "-";
-    emailDetailFiles.textContent = (found.files && found.files.length) ? found.files.join(", ") : "-";
-    emailDetailRisks.textContent = (found.risks && found.risks.length) ? found.risks.join(" · ") : "-";
-
-    showView("emailDetail");
+    viewHome.style.display = viewName === "home" ? "block" : "none";
+    viewProfile.style.display = viewName === "profile" ? "block" : "none";
+    viewEmailDetail.style.display = viewName === "emailDetail" ? "block" : "none";
 }
 
 /* =========================
@@ -192,7 +137,7 @@ tabs.forEach(tab => {
 });
 
 /* =========================
-   Existing: Backend call
+   Backend call (existing)
 ========================= */
 async function callBackend() {
     btnSubmit.disabled = true;
@@ -360,9 +305,8 @@ async function login() {
             loginScreen.style.display = "none";
             workspaceShell.style.display = "flex";
 
-            seedEmailsIfEmpty();
-            renderEmailsList();
             showView("home");
+            await renderEmailsList();
         } else {
             loginError.textContent = "invalid login";
         }
@@ -378,8 +322,8 @@ function logout() {
 
     if (token) {
         fetch(API_BASE_URL + "/api/auth/logout", {
-        method: "POST",
-        headers: { "Authorization": "Bearer " + token }
+            method: "POST",
+            headers: { "Authorization": "Bearer " + token }
         }).catch(() => {});
     }
 
@@ -391,21 +335,267 @@ function logout() {
 
 logoutBtn.addEventListener("click", logout);
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
     const token = localStorage.getItem("auth_token");
     if (token) {
         loginScreen.style.display = "none";
         workspaceShell.style.display = "flex";
-
-        seedEmailsIfEmpty();
-        renderEmailsList();
         showView("home");
+        await renderEmailsList();
     }
 });
 
 /* =========================
+   Profile loading
+========================= */
+async function loadProfile() {
+    if (!profileStatus) return; // profile UI not present
+
+    const token = getToken();
+    if (!token) {
+        profileStatus.textContent = "Not logged in.";
+        profileUid.textContent = "-";
+        profileUserName.textContent = "-";
+        profileRole.textContent = "-";
+        profileName.textContent = "-";
+        profileEmail.textContent = "-";
+        profilePhone.textContent = "-";
+        return;
+    }
+
+    profileStatus.textContent = "Loading...";
+
+    try {
+        const data = await getMyProfile(token);
+
+        if (!data.ok) {
+            profileStatus.textContent = "Error: " + (data.error || "unknown_error");
+            return;
+        }
+
+        const p = data.profile || {};
+        profileUid.textContent = p.uid ?? "-";
+        profileUserName.textContent = p.user_name ?? "-";
+        profileRole.textContent = p.role ?? "-";
+        profileName.textContent = p.name ?? "-";
+        profileEmail.textContent = p.email ?? "-";
+        profilePhone.textContent = p.phone ?? "-";
+
+        profileStatus.textContent = "Loaded.";
+    } catch (err) {
+        profileStatus.textContent = "Error: " + err.message;
+    }
+}
+
+/* =========================
+   Emails: list + detail (NEW)
+========================= */
+async function renderEmailsList() {
+    const token = getToken();
+    if (!token) {
+        unarchivedCountEl.textContent = "0";
+        emailsListEl.innerHTML = "";
+        emailsEmptyEl.style.display = "block";
+        return;
+    }
+
+    emailsListEl.innerHTML = "";
+    emailsEmptyEl.style.display = "none";
+    unarchivedCountEl.textContent = "...";
+
+    try {
+        const data = await fetchJson(API_BASE_URL + "/api/emails?archived=false", {
+            method: "GET",
+            headers: {
+                ...authHeaders(),
+            }
+        });
+
+        if (!data.ok) {
+            // token may be invalid
+            unarchivedCountEl.textContent = "0";
+            emailsListEl.innerHTML = "";
+            emailsEmptyEl.style.display = "block";
+            return;
+        }
+
+        const emails = data.emails || [];
+        unarchivedCountEl.textContent = String(emails.length);
+
+        emailsListEl.innerHTML = "";
+
+        if (!emails.length) {
+            emailsEmptyEl.style.display = "block";
+            return;
+        }
+
+        emailsEmptyEl.style.display = "none";
+
+        for (const e of emails) {
+            const item = document.createElement("div");
+            item.className = "sidebar-item";
+            item.dataset.emailId = e.id;
+
+            const title = document.createElement("div");
+            title.className = "t";
+            title.textContent = e.subject || `Email ${e.id}`;
+
+            const meta = document.createElement("div");
+            meta.className = "m";
+            const fromText = e.from || "-";
+            const riskText = e.risk_level || "unknown";
+            meta.textContent = `${fromText} · risk:${riskText} · ${e.status || "draft"}`;
+
+            item.appendChild(title);
+            item.appendChild(meta);
+
+            item.addEventListener("click", () => openEmailDetail(e.id));
+
+            emailsListEl.appendChild(item);
+        }
+    } catch (err) {
+        unarchivedCountEl.textContent = "0";
+        emailsListEl.innerHTML = "";
+        emailsEmptyEl.style.display = "block";
+    }
+}
+
+async function openEmailDetail(emailId) {
+    const token = getToken();
+    if (!token) return;
+
+    selectedEmailId = emailId;
+
+    // Fill placeholders quickly while loading
+    emailDetailTitle.textContent = `Email ${emailId}`;
+    emailDetailFrom.textContent = "-";
+    emailDetailCustomerType.textContent = "-";
+    emailDetailFiles.textContent = "-";
+    emailDetailRisks.textContent = "-";
+    emailDetailBodyBox.textContent = "(loading...)";
+    emailDetailReplyBox.textContent = "No reply";
+
+    showView("emailDetail");
+
+    try {
+        const data = await fetchJson(API_BASE_URL + "/api/emails/" + encodeURIComponent(emailId), {
+            method: "GET",
+            headers: {
+                ...authHeaders(),
+            }
+        });
+
+        if (!data.ok) {
+            emailDetailRisks.textContent = "Error: " + (data.error || "unknown_error");
+            emailDetailBodyBox.textContent = "(empty)";
+            emailDetailReplyBox.textContent = "No reply";
+            return;
+        }
+
+        const e = data.email || {};
+
+        emailDetailTitle.textContent = e.subject || `Email ${e.id || emailId}`;
+        emailDetailFrom.textContent = e.from || "-";
+
+        const lang = e.language || "unknown";
+        const region = e.source_region || "unknown";
+        const status = e.status || "draft";
+        emailDetailCustomerType.textContent = `lang:${lang} · region:${region} · status:${status}`;
+
+        emailDetailFiles.textContent = "N/A";
+
+        const risk = e.risk || {};
+        const level = risk.level || "unknown";
+        const flags = Array.isArray(risk.flags) ? risk.flags : [];
+        const summary = risk.summary || null;
+
+        const riskLine = [
+            `level:${level}`,
+            flags.length ? `flags:${flags.join(", ")}` : null,
+            summary ? `summary:${summary}` : null,
+        ].filter(Boolean).join(" · ");
+
+        emailDetailRisks.textContent = riskLine || "level:unknown";
+
+        // ✅ Fill Body + Reply boxes
+        const body = (e.body && String(e.body).trim()) ? e.body : "(empty)";
+        const reply = (e.reply && String(e.reply).trim()) ? e.reply : "No reply";
+        emailDetailBodyBox.textContent = body;
+        emailDetailReplyBox.textContent = reply;
+
+    } catch (err) {
+        const msg = (err && err.message) ? err.message : String(err);
+
+        if (msg.includes("no such file") || msg.includes("email not found") || msg.includes("404")) {
+            alert(`Email ${emailId} no longer exists (it may have been deleted).`);
+            selectedEmailId = null;
+            showView("home");
+            await renderEmailsList();
+            return;
+        }
+
+        emailDetailRisks.textContent = "Error: " + msg;
+        emailDetailBodyBox.textContent = "(empty)";
+        emailDetailReplyBox.textContent = "No reply";
+    }
+}
+
+/* =========================
    Sidebar navigation
 ========================= */
-navProfileBtn.addEventListener("click", () => showView("profile"));
+navProfileBtn.addEventListener("click", async () => {
+    showView("profile");
+    await loadProfile();
+});
+
 profileBackBtn.addEventListener("click", () => showView("home"));
 emailDetailBackBtn.addEventListener("click", () => showView("home"));
+emailDetailDeleteBtn.addEventListener("click", async () => {
+    const token = getToken();
+    if (!token) return;
+
+    if (!selectedEmailId) {
+        alert("No email selected.");
+        return;
+    }
+
+    const ok = confirm(`Delete email ${selectedEmailId}? This will remove the JSON file from user_data.`);
+    if (!ok) return;
+
+    try {
+        const data = await fetchJson(
+            API_BASE_URL + "/api/emails/" + encodeURIComponent(selectedEmailId),
+            {
+                method: "DELETE",
+                headers: {
+                    ...authHeaders(),
+                },
+            }
+        );
+
+        if (!data.ok) {
+            alert("Delete failed: " + (data.error || "unknown_error"));
+            return;
+        }
+
+        const deletedId = selectedEmailId;
+        selectedEmailId = null;
+
+        const node = emailsListEl.querySelector(`[data-email-id="${deletedId}"]`);
+        if (node) node.remove();
+
+        const cur = parseInt(unarchivedCountEl.textContent || "0", 10);
+        if (!Number.isNaN(cur) && cur > 0) unarchivedCountEl.textContent = String(cur - 1);
+
+        if (!emailsListEl.querySelector(".sidebar-item")) {
+        emailsEmptyEl.style.display = "block";
+        }
+
+        showView("home");
+        responseBody.textContent = "";
+
+        await renderEmailsList();
+    } catch (err) {
+        alert("Delete failed: " + err.message);
+    }
+});

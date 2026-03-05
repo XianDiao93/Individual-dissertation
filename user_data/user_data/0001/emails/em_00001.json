@@ -1,0 +1,16 @@
+{
+    "id": "00001",
+    "source_region": "UK",
+    "language": "english",
+    "subject": null,
+    "body": "hello",
+    "reply": null,
+    "group_id": null,
+    "from": null,
+    "status": "draft",
+    "risk": {
+        "level": "unknown",
+        "flags": [],
+        "summary": null
+    }
+}

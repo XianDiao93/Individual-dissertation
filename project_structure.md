@@ -28,7 +28,10 @@ Individual dissertation/
 |  |  |  |- doc_router.py
 |  |  |  |- risk_router.py
 |  |  |  |- screening_router.py
+|  |  |  |- email_router.py
+|  |  |  |- group_router.py
 |  |  |  |- auth_router.py
+|  |  |  |- profile_router.py
 |  |  |
 |  |  |- services/
 |  |  |  |- __init__.py
@@ -40,7 +43,13 @@ Individual dissertation/
 |  |  |  |- communication.py
 |  |  |  |- document.py
 |  |  |  |- logging_service.py
+|  |  |  |- email.py
+|  |  |  |- group.py
+|  |  |  |- profile.py
 |  |  |  |- auth.py
+|  |  |  |- user_data_store.py
+|  |  |  |- id_service.py
+|  |  |  |- email_enrichment.py
 |  |  |
 |  |  |- models/
 |  |  |  |- __init__.py
@@ -50,11 +59,14 @@ Individual dissertation/
 |  |  |  |- risk_model.py
 |  |  |  |- sanctions_model.py
 |  |  |  |- auth_model.py
+|  |  |  |- email_model.py
+|  |  |  |- group_model.py
+|  |  |  |- profile_model.py
+|  |  |  |- common_model.py
 |  |  |
 |  |  |- database/                     #The data from open source database
-|  |  |  |- sanctions_rules.json
-|  |  |  |- country_risk_tiers.json
-|  |  |  |- sample_trade_cases.json
+|  |  |  |- system_prompts/
+|  |  |     |- chat_basic.json
 |  |  |
 |  |  |- utils/
 |  |     |- __init__.py
@@ -72,9 +84,9 @@ Individual dissertation/
 |  |  |- api.js
 |  |  |- styles.css
 |  |  |- components/
-|  |  |  |- InputPanel.js
-|  |  |  |- OutputPanel.js
-|  |  |  |- RiskBanner.js
+|  |     |- InputPanel.js
+|  |     |- OutputPanel.js
+|  |     |- RiskBanner.js
 |  |
 |  |- package.json
 |  |- README.md
@@ -111,7 +123,7 @@ Individual dissertation/
 |  |  |- dissertation_draft.docx
 |  |  |- figures/
 |  |- slides/
-|    |- final_presentation.pptx
+|     |- final_presentation.pptx
 |
 |- models/
 |  |- finetuned/
@@ -123,17 +135,23 @@ Individual dissertation/
 |  |- users.json                 # 模拟账号列表（登录用）
 |  |- user_data/                  # 每个用户的业务画像/偏好
 |  |  |- 0001/
-|  |    |- customers/
-|  |    |- documents
-|  |    |- emails/
-|  |    |- replies/
-|  |    |- 0001_profile.json
+|  |  |  |- documents
+|  |  |  |- emails/
+|  |  |  |  |- em_00001.json
+|  |  |  |  |- em_00002.json
+|  |  |  |- profile.json
+|  |  |- 0002/
+|  |     |- documents
+|  |     |- emails/
+|  |     |  |- em_00001.json
+|  |     |  |- em_00002.json
+|  |     |- profile.json
 |  |- surveys/                   # 问卷与回答（你最需要）
 |  |  |- survey_schema.json
 |  |  |- responses/
 |  |     |- 0001_response.json
 |  |- logs/                      # 用户操作日志（用于评估）
-|     |- 0001_cases.jsonl
+|     |- 0001_cases.json
 |
 |- .gitignore
 |- README.md

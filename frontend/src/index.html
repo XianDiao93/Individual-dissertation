@@ -273,14 +273,26 @@
                 </div>
             </section>
 
-            <!-- VIEW: PROFILE (placeholder) -->
+            <!-- VIEW: PROFILE -->
             <section id="view-profile" class="view" style="display:none;">
                 <div class="view-card">
                     <div class="view-head">
                         <h2>Profile</h2>
                         <button class="btn btn-primary" id="profileBackBtn">Back</button>
                     </div>
-                    <p class="subtitle">Placeholder. Layout to be added later.</p>
+
+                    <p id="profileStatus" class="subtitle" style="margin-top:10px;">
+                        Loading...
+                    </p>
+
+                    <div class="kv">
+                        <div><span class="k">UID:</span> <span id="profileUid">-</span></div>
+                        <div><span class="k">Username:</span> <span id="profileUserName">-</span></div>
+                        <div><span class="k">Role:</span> <span id="profileRole">-</span></div>
+                        <div><span class="k">Name:</span> <span id="profileName">-</span></div>
+                        <div><span class="k">Email:</span> <span id="profileEmail">-</span></div>
+                        <div><span class="k">Phone:</span> <span id="profilePhone">-</span></div>
+                    </div>
                 </div>
             </section>
 
@@ -289,7 +301,10 @@
                 <div class="view-card">
                     <div class="view-head">
                         <h2 id="emailDetailTitle">Email</h2>
-                        <button class="btn btn-primary" id="emailDetailBackBtn">Back</button>
+                        <div class="view-actions">
+                            <button class="btn btn-danger" id="emailDetailDeleteBtn">Delete</button>
+                            <button class="btn btn-primary" id="emailDetailBackBtn">Back</button>
+                        </div>
                     </div>
 
                     <div class="kv">
@@ -297,6 +312,16 @@
                         <div><span class="k">Customer type:</span> <span id="emailDetailCustomerType">-</span></div>
                         <div><span class="k">Files:</span> <span id="emailDetailFiles">-</span></div>
                         <div><span class="k">Risks:</span> <span id="emailDetailRisks">-</span></div>
+                    </div>
+
+                    <div class="panel" style="margin-top: 14px;">
+                        <h3 style="margin: 0 0 10px 0;">Email body</h3>
+                        <div id="emailDetailBodyBox" class="mono-box">(empty)</div>
+                    </div>
+
+                    <div class="panel" style="margin-top: 14px;">
+                        <h3 style="margin: 0 0 10px 0;">Reply</h3>
+                        <div id="emailDetailReplyBox" class="mono-box">No reply</div>
                     </div>
 
                     <p class="subtitle" style="margin-top:14px;">

@@ -77,3 +77,24 @@ export function callDocumentAPI({
         extra_notes,
     });
 }
+
+/**
+ * Get current user's profile.
+ * Expected backend route: GET /api/profile/me
+ */
+export async function getMyProfile(token) {
+    const res = await fetch(API_BASE_URL + "/api/profile/me", {
+        method: "GET",
+        headers: {
+            "Authorization": "Bearer " + token,
+        },
+    });
+
+    if (!res.ok) {
+        let detail = "";
+        try { detail = await res.text(); } catch {}
+        throw new Error(`Request failed with status ${res.status}` + (detail ? `: ${detail}` : ""));
+    }
+
+    return res.json();
+}
