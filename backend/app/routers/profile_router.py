@@ -60,6 +60,7 @@ async def update_my_profile(
         phone=req.phone,
         email=req.email,
         name=req.name,
+        region=req.region,
         fallback_user_name=user.user_name,
         fallback_role=user.role,
     )

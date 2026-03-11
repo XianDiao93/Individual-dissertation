@@ -9,6 +9,7 @@ USERS_JSON_PATH = USER_DATA_DIR / "users.json"
 
 SYSTEM_PROMPTS_DIR = PROJECT_ROOT / "backend" / "app" / "database" / "system_prompts"
 CHAT_BASIC_PROMPT_PATH = SYSTEM_PROMPTS_DIR / "chat_basic.json"
+DOC_BASIC_PROMPT_PATH = SYSTEM_PROMPTS_DIR / "doc_basic.json"
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 if not OPENAI_API_KEY:

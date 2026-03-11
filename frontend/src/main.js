@@ -57,6 +57,7 @@ const profileRole = document.getElementById("profileRole");
 const profileName = document.getElementById("profileName");
 const profileEmail = document.getElementById("profileEmail");
 const profilePhone = document.getElementById("profilePhone");
+const profileRegion = document.getElementById("profileRegion");
 
 /* =========================
    Helpers
@@ -166,6 +167,7 @@ async function callBackend() {
             });
 
             responseBody.textContent = data.reply || JSON.stringify(data, null, 2);
+            await renderEmailsList();
             return;
         }
 
@@ -360,13 +362,14 @@ async function loadProfile() {
         profileName.textContent = "-";
         profileEmail.textContent = "-";
         profilePhone.textContent = "-";
+        profileRegion.textContent = "-";
         return;
     }
 
     profileStatus.textContent = "Loading...";
 
     try {
-        const data = await getMyProfile(token);
+        const data = await getMyProfile();
 
         if (!data.ok) {
             profileStatus.textContent = "Error: " + (data.error || "unknown_error");
@@ -380,6 +383,7 @@ async function loadProfile() {
         profileName.textContent = p.name ?? "-";
         profileEmail.textContent = p.email ?? "-";
         profilePhone.textContent = p.phone ?? "-";
+        profileRegion.textContent = p.region ?? "-";
 
         profileStatus.textContent = "Loaded.";
     } catch (err) {

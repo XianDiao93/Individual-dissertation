@@ -1,0 +1,22 @@
+[
+    {
+        "tag": "war_zone",
+        "severity": "critical",
+        "description": "Country is experiencing active armed conflict or war."
+    },
+    {
+        "tag": "civil_conflict_risk",
+        "severity": "high",
+        "description": "Country has ongoing internal armed conflict or insurgency."
+    },
+    {
+        "tag": "fragile_state",
+        "severity": "high",
+        "description": "Country has weak governance and institutional instability."
+    },
+    {
+        "tag": "political_instability",
+        "severity": "medium",
+        "description": "Country experiences frequent political unrest, coups, or unstable governance."
+    }
+]

@@ -1,0 +1,10 @@
+[
+    "military_goods",
+    "dual_use_goods",
+    "hazardous_chemical",
+    "explosive_material",
+    "radioactive_material",
+    "regulated_medical_device",
+    "regulated_pharmaceutical",
+    "counterfeit_sensitive_product"
+]

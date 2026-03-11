@@ -37,7 +37,13 @@ Individual dissertation/
 |  |  |  |- __init__.py
 |  |  |  |- llm_client.py
 |  |  |  |- extraction.py
-|  |  |  |- sanctions.py
+|  |  |  |- product.py
+|  |  |  |- political_geopolitical.py
+|  |  |  |- business_environment.py
+|  |  |  |- transaction_fraud.py
+|  |  |  |- intent_conversation.py
+|  |  |  |- regulatory_legal_risk.py
+|  |  |  |- cultural_communication_risk.py
 |  |  |  |- risk.py
 |  |  |  |- decision_engine.py
 |  |  |  |- communication.py
@@ -66,7 +72,32 @@ Individual dissertation/
 |  |  |
 |  |  |- database/                     #The data from open source database
 |  |  |  |- system_prompts/
-|  |  |     |- chat_basic.json
+|  |  |  |  |- chat_basic.json
+|  |  |  |  |- doc_basic.json
+|  |  |  |  |- extraction_basic.json
+|  |  |  |- regions/
+|  |  |  |  |- country_codes.json
+|  |  |  |- risks/
+|  |  |     |- risk_categories.json
+|  |  |     |- business_environment/
+|  |  |     |  |- data source.md
+|  |  |     |  |- country_tags.json
+|  |  |     |  |- tags.json
+|  |  |     |- cultural_communication/
+|  |  |     |  |- tags.json
+|  |  |     |- intent_conversation/
+|  |  |     |  |- tags.json
+|  |  |     |- political_geopolitical/
+|  |  |     |  |- data source.md
+|  |  |     |  |- country_tags.json
+|  |  |     |  |- tags.json
+|  |  |     |- product/
+|  |  |     |  |- product_keywords.json
+|  |  |     |  |- tags.json
+|  |  |     |- regulatory_legal/
+|  |  |     |  |- tags.json
+|  |  |     |- transaction_fraud/
+|  |  |        |- tags.json
 |  |  |
 |  |  |- utils/
 |  |     |- __init__.py

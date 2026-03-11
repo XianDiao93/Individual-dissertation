@@ -4,14 +4,9 @@ from fastapi import APIRouter, Header
 from typing import Optional
 
 from app.models.auth_model import LoginRequest, LoginResponse, MeResponse
-from app.services.auth import AuthService
-from app.config import USERS_JSON_PATH
+from app.services.auth_instance import auth_service
 
 router = APIRouter()
-
-# 初始化 auth service
-auth_service = AuthService(str(USERS_JSON_PATH))
-
 
 @router.post("/login", response_model=LoginResponse)
 async def login_endpoint(req: LoginRequest) -> LoginResponse:

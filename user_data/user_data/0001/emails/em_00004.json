@@ -1,0 +1,19 @@
+{
+    "source_region": "GB",
+    "language": "auto",
+    "subject": null,
+    "body": "Hello, we are from Iran, we are interested in your product.",
+    "reply": "Dear Sir/Madam,\n\nThank you for your interest in our product. However, due to compliance and regulatory concerns, we are unable to proceed with your request at this time.\n\nWe appreciate your understanding.\n\nBest regards,",
+    "group_id": null,
+    "from": null,
+    "status": "draft",
+    "risk": {
+        "level": "high",
+        "flags": [
+            "incomplete_buyer_profile",
+            "unverified_counterparty"
+        ],
+        "summary": "Intent/conversation risk tags matched: incomplete_buyer_profile. Transaction/fraud risk tags matched: unverified_counterparty."
+    },
+    "id": "00004"
+}

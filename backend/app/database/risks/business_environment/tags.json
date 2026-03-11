@@ -1,0 +1,37 @@
+[
+    {
+        "tag": "high_corruption_risk",
+        "severity": "high",
+        "description": "Country has a high level of corruption which may affect business transactions."
+    },
+    {
+        "tag": "fraud_scam_risk",
+        "severity": "high",
+        "description": "Country has a higher prevalence of trade fraud, scams, or unreliable counterparties."
+    },
+    {
+        "tag": "weak_legal_enforcement",
+        "severity": "high",
+        "description": "Legal enforcement and contract protection are weak, increasing commercial risk."
+    },
+    {
+        "tag": "underdeveloped_economy",
+        "severity": "medium",
+        "description": "Country has relatively low economic development and limited purchasing power."
+    },
+    {
+        "tag": "weak_industrial_base",
+        "severity": "medium",
+        "description": "Country has limited industrial capacity or manufacturing base."
+    },
+    {
+        "tag": "weak_infrastructure",
+        "severity": "medium",
+        "description": "Transport, logistics, or financial infrastructure is underdeveloped."
+    },
+    {
+        "tag": "informal_economy_dominant",
+        "severity": "medium",
+        "description": "Large share of economic activity occurs in the informal sector."
+    }
+]

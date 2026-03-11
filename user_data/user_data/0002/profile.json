@@ -3,5 +3,6 @@
     "user_name": "Howareyou",
     "phone": null,
     "email": null,
-    "name": null
+    "name": null,
+    "region": "US"
 }

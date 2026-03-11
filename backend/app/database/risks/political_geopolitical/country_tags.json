@@ -1,0 +1,30 @@
+{
+    "UA": ["war_zone"],
+    "SY": ["war_zone"],
+    "SD": ["war_zone"],
+    
+    "MM": ["civil_conflict_risk"],
+    "SO": ["civil_conflict_risk"],
+    "ET": ["civil_conflict_risk"],
+    "CD": ["civil_conflict_risk"],
+    "NG": ["civil_conflict_risk"],
+
+    "AF": ["fragile_state"],
+    "SS": ["fragile_state"],
+    "CF": ["fragile_state"],
+    "TD": ["fragile_state"],
+    "ML": ["fragile_state"],
+    "NE": ["fragile_state"],
+    "YE": ["fragile_state"],
+    "HT": ["fragile_state"],
+
+    "IR": ["political_instability"],
+    "IQ": ["political_instability"],
+    "LY": ["political_instability"],
+    "LB": ["political_instability"],
+    "VE": ["political_instability"],
+    "BY": ["political_instability"],
+    "RU": ["political_instability"],
+    "PK": ["political_instability"],
+    "TR": ["political_instability"]
+}

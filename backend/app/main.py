@@ -7,6 +7,7 @@ from app.routers.doc_router import router as doc_router
 from app.routers.auth_router import router as auth_router
 from app.routers.profile_router import router as profile_router
 from app.routers.email_router import router as email_router
+from app.routers.risk_router import router as risk_router
 
 
 app = FastAPI(
@@ -39,6 +40,7 @@ app.include_router(doc_router, prefix="/api", tags=["document"])
 app.include_router(auth_router, prefix="/api/auth", tags=["authentication"])
 app.include_router(profile_router, prefix="/api", tags=["profile"])
 app.include_router(email_router, prefix="/api", tags=["emails"])
+app.include_router(risk_router)
 
 
 @app.get("/")

@@ -3,5 +3,6 @@
     "user_name": "Admin",
     "phone": null,
     "email": null,
-    "name": null
+    "name": null,
+    "region": "GB"
 }

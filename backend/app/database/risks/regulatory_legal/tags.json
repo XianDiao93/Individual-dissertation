@@ -1,0 +1,8 @@
+[
+    "sanctioned_country",
+    "sanctioned_entity",
+    "embargo_country",
+    "restricted_goods",
+    "dual_use_goods",
+    "export_license_required"
+]

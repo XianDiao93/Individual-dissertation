@@ -1,0 +1,17 @@
+[
+    {
+        "tag": "suspicious_urgency",
+        "severity": "medium",
+        "description": "The message uses unusual urgency or pressure."
+    },
+    {
+        "tag": "unverified_counterparty",
+        "severity": "high",
+        "description": "The counterparty identity cannot be confidently verified."
+    },
+    {
+        "tag": "possible_scam_pattern",
+        "severity": "high",
+        "description": "The inquiry contains features commonly associated with fraudulent trade messages."
+    }
+]

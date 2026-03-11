@@ -1,0 +1,157 @@
+{
+    "military_goods": [
+        "rifle",
+        "assault rifle",
+        "pistol",
+        "machine gun",
+        "ammunition",
+        "artillery shell",
+        "grenade",
+        "missile",
+        "torpedo",
+        "military drone",
+        "military radar",
+        "tank armor",
+        "guided rocket",
+        "ballistic missile component"
+    ],
+
+    "dual_use_goods": [
+        "industrial sensor",
+        "pressure sensor",
+        "thermal imaging camera",
+        "night vision device",
+        "drone",
+        "UAV",
+        "satellite communication equipment",
+        "encryption chip",
+        "high performance processor",
+        "navigation system",
+        "gyroscope",
+        "accelerometer",
+        "laser rangefinder",
+        "precision CNC machine",
+        "high precision bearings"
+    ],
+
+    "hazardous_chemical": [
+        "ammonium nitrate",
+        "nitric acid",
+        "sulfuric acid",
+        "hydrochloric acid",
+        "chlorine",
+        "hydrogen peroxide",
+        "sodium cyanide",
+        "potassium cyanide",
+        "phosphorus",
+        "industrial solvent",
+        "toxic pesticide",
+        "chemical precursor",
+        "flammable solvent",
+        "industrial oxidizer"
+    ],
+
+    "explosive_material": [
+        "TNT",
+        "dynamite",
+        "RDX explosive",
+        "PETN explosive",
+        "detonator",
+        "blasting cap",
+        "propellant powder",
+        "rocket propellant",
+        "explosive charge",
+        "military grade explosive",
+        "pyrotechnic compound",
+        "industrial explosive"
+    ],
+
+    "radioactive_material": [
+        "uranium",
+        "enriched uranium",
+        "plutonium",
+        "radioisotope",
+        "radiation source",
+        "cobalt-60 source",
+        "cesium-137 source",
+        "radiation detector",
+        "nuclear fuel",
+        "nuclear material",
+        "radioactive tracer"
+    ],
+
+    "regulated_medical_device": [
+        "MRI scanner",
+        "CT scanner",
+        "ultrasound device",
+        "ventilator",
+        "defibrillator",
+        "surgical robot",
+        "medical imaging equipment",
+        "patient monitor",
+        "dialysis machine",
+        "X-ray machine",
+        "implantable medical device",
+        "medical diagnostic equipment"
+    ],
+
+    "regulated_pharmaceutical": [
+        "antibiotics",
+        "vaccine",
+        "insulin",
+        "controlled drugs",
+        "opioid medicine",
+        "morphine",
+        "pharmaceutical ingredient",
+        "active pharmaceutical ingredient",
+        "API chemical",
+        "clinical trial drug",
+        "biological medicine",
+        "medical injection"
+    ],
+
+    "food_agriculture_regulated": [
+        "raw meat",
+        "frozen meat",
+        "dairy products",
+        "milk powder",
+        "infant formula",
+        "agricultural seeds",
+        "genetically modified seeds",
+        "fertilizer",
+        "pesticide",
+        "animal feed",
+        "plant seedlings",
+        "grain shipment"
+    ],
+
+    "high_value_electronics": [
+        "semiconductor chip",
+        "microprocessor",
+        "GPU",
+        "AI accelerator chip",
+        "5G communication equipment",
+        "network switch",
+        "server hardware",
+        "high performance computing system",
+        "telecommunication base station",
+        "satellite modem",
+        "data center hardware",
+        "industrial control system"
+    ],
+
+    "counterfeit_sensitive_product": [
+        "luxury handbag",
+        "designer clothing",
+        "luxury watch",
+        "brand sneakers",
+        "smartphone",
+        "tablet computer",
+        "consumer electronics",
+        "branded cosmetics",
+        "pharmaceutical brand drug",
+        "automotive spare parts",
+        "branded perfume",
+        "gaming console"
+    ]
+}

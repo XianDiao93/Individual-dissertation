@@ -5,9 +5,10 @@ from pathlib import Path
 from typing import Optional
 from openai import OpenAI
 from functools import lru_cache
+import re
 
 from app.models.doc_model import BaseDocumentData, DocumentType
-from app.config import CHAT_BASIC_PROMPT_PATH
+from app.config import CHAT_BASIC_PROMPT_PATH, DOC_BASIC_PROMPT_PATH
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -26,21 +27,33 @@ def _load_chat_prompt_bundle() -> dict:
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
+@lru_cache(maxsize=8)
+def _load_doc_prompt_bundle() -> dict:
+    path = Path(DOC_BASIC_PROMPT_PATH)
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
 
 def generate_business_reply(
     message: str,
     language: str = "auto",
-    region: str = "EU",
+    region: str = "GB",
     tone: str = "formal",
     reply_form: str = "email",
+    user_name: Optional[str] = None,
+    name: Optional[str] = None,
+    email: Optional[str] = None,
+    phone: Optional[str] = None,
+    normalized_facts: Optional[dict] = None,
+    risk_result: Optional[dict] = None,
     model: str = "gpt-4o-mini",
 ) -> str:
-    # Normalise tone
+
+    # Normalize tone
     tone_str = tone.lower()
     if tone_str not in {"formal", "neutral", "friendly"}:
         tone_str = "formal"
 
-    # Normalise reply_form
+    # Normalize reply form
     reply_form_norm = reply_form.lower()
     if reply_form_norm not in {"email", "chat"}:
         reply_form_norm = "email"
@@ -53,32 +66,84 @@ def generate_business_reply(
 
     system_template = bundle.get("system_template", "")
 
+    # Clean identity fields
+    safe_user_name = user_name if user_name not in (None, "", "null") else None
+    safe_name = name if name not in (None, "", "null") else None
+    safe_email = email if email not in (None, "", "null") else None
+    safe_phone = phone if phone not in (None, "", "null") else None
+    safe_region = region if region not in (None, "", "null") else "GB"
+
+    available_identity_lines = [
+        f"Preferred display name: {safe_name or 'N/A'}",
+        f"Account user name: {safe_user_name or 'N/A'}",
+        f"Contact email: {safe_email or 'N/A'}",
+        f"Contact phone: {safe_phone or 'N/A'}",
+        f"Sender region: {safe_region}",
+    ]
+
+    available_identity_block = "\n".join(available_identity_lines)
+
+    # ---------- Risk context ----------
+    facts_block = json.dumps(normalized_facts or {}, indent=2)
+    risk_block = json.dumps(risk_result or {}, indent=2)
+
     system_prompt = system_template.format(
         mode_description=mode_cfg.get("mode_description", ""),
         formatting_instructions=mode_cfg.get("formatting_instructions", ""),
         language=language,
-        region=region,
+        region=safe_region,
         tone_str=tone_str,
+    )
+
+    user_content = (
+        f"User message (target region={safe_region}, tone={tone_str}, "
+        f"reply_form={reply_form_norm}, requested_language={language}):\n"
+        f"{message}\n\n"
+
+        "Extracted trade facts:\n"
+        "---------------------------------\n"
+        f"{facts_block}\n"
+        "---------------------------------\n\n"
+
+        "Risk assessment:\n"
+        "---------------------------------\n"
+        f"{risk_block}\n"
+        "---------------------------------\n\n"
+
+        "Instructions:\n"
+        "- If decision is CLEAR: respond normally.\n"
+        "- If decision is WARN: respond cautiously and request clarification.\n"
+        "- If decision is BLOCK: politely refuse the request due to compliance or regulatory concerns.\n"
+        "- Do not mention internal 'risk scoring systems'.\n"
+        "- Keep the reply natural and professional.\n\n"
+
+        "Available sender information:\n"
+        "---------------------------------\n"
+        f"{available_identity_block}\n"
+        "---------------------------------\n\n"
+
+        "Rules for sender information:\n"
+        "- Use sender details only if provided.\n"
+        "- Do not invent missing identity fields.\n"
+        "- Do not output placeholders such as [Your Name].\n"
+        "- If identity fields are missing, write a reply without them.\n"
+        "- Never output bracketed placeholders such as [Your Company Name], [Your Contact Information], or similar template text.\n"
+        "- If sender/company identity is missing, omit the signature details entirely and end with a natural generic closing.\n"
     )
 
     response = client.responses.create(
         model=model,
         input=[
             {"role": "system", "content": system_prompt},
-            {
-                "role": "user",
-                "content": (
-                    f"User message (target region={region}, tone={tone_str}, "
-                    f"reply_form={reply_form_norm}, requested_language={language}):\n"
-                    f"{message}"
-                ),
-            },
+            {"role": "user", "content": user_content},
         ],
     )
 
     reply_text: Optional[str] = getattr(response, "output_text", None)
     if not reply_text:
         reply_text = str(response)
+
+    reply_text = _cleanup_template_placeholders(reply_text)
 
     return reply_text
 
@@ -91,45 +156,57 @@ def generate_document_text(
     Use the LLM to generate the main body text of a trade document.
 
     The model receives:
-      - document_type (sales_contract / quotation / product_manual)
-      - core structured fields (seller, buyer, product, price, terms, etc.)
-      - optional template_text as a structural / style reference
+        - document_type (sales_contract / quotation / product_manual)
+        - core structured fields (seller, buyer, product, price, terms, etc.)
+        - optional template_text as a structural / style reference
 
     It should output a ready-to-use document body in plain text.
     """
 
+    bundle = _load_doc_prompt_bundle()
+    
     # High-level instruction depending on document type
     if data.document_type == DocumentType.sales_contract:
-        doc_purpose = (
-            "Draft a clear and professional international sales contract between seller and buyer. "
-            "Use numbered clauses where appropriate."
-        )
+        modes = bundle.get("modes", {})
+        doc_purpose = modes.get("sales_contract")
+        # doc_purpose = (
+        #     "Draft a clear and professional international sales contract between seller and buyer. "
+        #     "Use numbered clauses where appropriate."
+        # )
     elif data.document_type == DocumentType.quotation:
-        doc_purpose = (
-            "Draft a clear and professional quotation for the buyer, with pricing, terms and validity. "
-            "You may use simple headings but keep it concise."
-        )
+        modes = bundle.get("modes", {})
+        doc_purpose = modes.get("quotation")
+        # doc_purpose = (
+        #     "Draft a clear and professional quotation for the buyer, with pricing, terms and validity. "
+        #     "You may use simple headings but keep it concise."
+        # )
     else:
         # product_manual
-        doc_purpose = (
-            "Draft a structured product manual / instruction document. "
-            "It should have clear sections, such as Overview, Parts and functions, "
-            "Usage, Safety instructions and Warranty."
-        )
+        modes = bundle.get("modes", {})
+        doc_purpose = modes.get("product_manual")
+        # doc_purpose = (
+        #     "Draft a structured product manual / instruction document. "
+        #     "It should have clear sections, such as Overview, Parts and functions, "
+        #     "Usage, Safety instructions and Warranty."
+        # )
 
-    system_prompt = (
-        "You are an AI assistant helping SMEs with international trade documentation.\n\n"
-        "Your task is to generate high-quality, professional text for trade documents "
-        "(contracts, quotations, product manuals). You must:\n"
-        "- Use clear, formal business language.\n"
-        "- Organise the content with logical sections and paragraphs.\n"
-        "- Do NOT add any placeholder like 'Lorem ipsum'; always use meaningful text.\n\n"
-        f"Specific goal for this document:\n{doc_purpose}\n\n"
-        "If a reference template is provided, you should:\n"
-        "- Follow its overall structure and headings as much as reasonable.\n"
-        "- Fill in any placeholders with the given data.\n"
-        "- Improve clarity and consistency where needed.\n"
+    system_template = bundle.get("system_template", "")
+    system_prompt = system_template.format(
+        purpose = doc_purpose
     )
+    # system_prompt = (
+    #     "You are an AI assistant helping SMEs with international trade documentation.\n\n"
+    #     "Your task is to generate high-quality, professional text for trade documents "
+    #     "(contracts, quotations, product manuals). You must:\n"
+    #     "- Use clear, formal business language.\n"
+    #     "- Organise the content with logical sections and paragraphs.\n"
+    #     "- Do NOT add any placeholder like 'Lorem ipsum'; always use meaningful text.\n\n"
+    #     f"Specific goal for this document:\n{doc_purpose}\n\n"
+    #     "If a reference template is provided, you should:\n"
+    #     "- Follow its overall structure and headings as much as reasonable.\n"
+    #     "- Fill in any placeholders with the given data.\n"
+    #     "- Improve clarity and consistency where needed.\n"
+    # )
 
     # Build a compact description of the structured data
     meta_lines = [
@@ -179,3 +256,39 @@ def generate_document_text(
         doc_text = str(response)
 
     return doc_text
+
+def _cleanup_template_placeholders(text: str) -> str:
+    if not text:
+        return text
+
+    banned_markers = [
+        "[Your Name]",
+        "[Your Full Name]",
+        "[Your Email]",
+        "[Your Email Address]",
+        "[Your Phone]",
+        "[Your Phone Number]",
+        "[Your Address]",
+        "[Your Position]",
+        "[Company Name]",
+        "[Your Company Name]",
+        "[Your Contact Information]",
+        "[Your Contact Info]",
+        "[Your Company]",
+        "[Company Address]",
+        "[Contact Information]",
+        "[Contact Info]",
+    ]
+
+    for marker in banned_markers:
+        text = text.replace(marker, "")
+
+    # 更通用：删掉形如 [Your ...] / [Company ...] / [Contact ...] 的模板占位符
+    text = re.sub(r"\[(?:Your|Company|Contact)[^\]]*\]", "", text, flags=re.IGNORECASE)
+
+    # 清理因为替换占位符留下的多余空格
+    text = re.sub(r"[ \t]+\n", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = re.sub(r"[ \t]{2,}", " ", text)
+
+    return text.strip()

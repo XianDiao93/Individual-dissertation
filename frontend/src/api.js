@@ -3,20 +3,39 @@
 
 const API_BASE_URL = "http://127.0.0.1:8000";
 
-/**
- * Generic helper to call a POST JSON API.
- * @param {string} endpoint - e.g. "/api/chat"
- * @param {object} payload - Request body JSON
- * @returns {Promise<any>} - Parsed JSON response
- */
-async function callApi(endpoint, payload) {
-      const res = await fetch(API_BASE_URL + endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-      });
+function getToken() {
+    return localStorage.getItem("auth_token");
+}
 
-    // Basic error handling
+/**
+ * Generic helper to call a JSON API.
+ * @param {string} endpoint
+ * @param {object} options
+ * @returns {Promise<any>}
+ */
+async function callApi(endpoint, options = {}) {
+    const {
+        method = "POST",
+        payload = null,
+        token = null,
+    } = options;
+
+    const headers = {};
+
+    if (payload !== null) {
+        headers["Content-Type"] = "application/json";
+    }
+
+    if (token) {
+        headers["Authorization"] = "Bearer " + token;
+    }
+
+    const res = await fetch(API_BASE_URL + endpoint, {
+        method,
+        headers,
+        body: payload !== null ? JSON.stringify(payload) : undefined,
+    });
+
     if (!res.ok) {
         let detail = "";
         try {
@@ -26,7 +45,7 @@ async function callApi(endpoint, payload) {
         }
         throw new Error(
             `Request failed with status ${res.status}` +
-              (detail ? `: ${detail}` : "")
+            (detail ? `: ${detail}` : "")
         );
     }
 
@@ -34,23 +53,32 @@ async function callApi(endpoint, payload) {
 }
 
 /**
- * Call communication (business email) endpoint.
- * Expected backend route: POST /api/chat
+ * Call communication endpoint.
+ * Backend route: POST /api/chat
  */
-export function callCommunicationAPI({ message, language, region, tone, replyForm }) {
+export function callCommunicationAPI({
+    message,
+    language,
+    region,
+    tone,
+    replyForm,
+}) {
     return callApi("/api/chat", {
-        message,
-        language,
-        region,
-        tone,
-        reply_form: replyForm,   // 后端用 snake_case: reply_form
+        method: "POST",
+        token: getToken(),
+        payload: {
+            message,
+            language,
+            region,
+            tone,
+            reply_form: replyForm,
+        },
     });
 }
 
-
 /**
  * Call document-generation endpoint.
- * Expected backend route: POST /api/document
+ * Backend route: POST /api/document
  */
 export function callDocumentAPI({
     document_type,
@@ -65,36 +93,29 @@ export function callDocumentAPI({
     extra_notes,
 }) {
     return callApi("/api/document", {
-        document_type,
-        currency,
-        seller_name,
-        buyer_name,
-        product,
-        quantity,
-        unit_price,
-        incoterm,
-        payment_term,
-        extra_notes,
+        method: "POST",
+        payload: {
+            document_type,
+            currency,
+            seller_name,
+            buyer_name,
+            product,
+            quantity,
+            unit_price,
+            incoterm,
+            payment_term,
+            extra_notes,
+        },
     });
 }
 
 /**
  * Get current user's profile.
- * Expected backend route: GET /api/profile/me
+ * Backend route: GET /api/profile/me
  */
-export async function getMyProfile(token) {
-    const res = await fetch(API_BASE_URL + "/api/profile/me", {
+export function getMyProfile() {
+    return callApi("/api/profile/me", {
         method: "GET",
-        headers: {
-            "Authorization": "Bearer " + token,
-        },
+        token: getToken(),
     });
-
-    if (!res.ok) {
-        let detail = "";
-        try { detail = await res.text(); } catch {}
-        throw new Error(`Request failed with status ${res.status}` + (detail ? `: ${detail}` : ""));
-    }
-
-    return res.json();
 }

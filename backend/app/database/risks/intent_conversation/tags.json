@@ -1,0 +1,17 @@
+[
+    {
+        "tag": "low_purchase_intent",
+        "severity": "medium",
+        "description": "The inquiry shows weak evidence of real purchasing intent."
+    },
+    {
+        "tag": "information_fishing",
+        "severity": "medium",
+        "description": "The sender may be collecting information rather than pursuing a genuine transaction."
+    },
+    {
+        "tag": "incomplete_buyer_profile",
+        "severity": "low",
+        "description": "The sender provides insufficient company or business context."
+    }
+]
