@@ -106,7 +106,7 @@ async def chat_endpoint(
             "status": "draft",
             "risk": {
                 "level": risk_result.get("risk", {}).get("level", "unknown"),
-                "flags": risk_result.get("risk", {}).get("flags", []),
+                "tags": risk_result.get("risk", {}).get("tags", []),
                 "summary": risk_result.get("risk", {}).get("summary"),
             },
         }

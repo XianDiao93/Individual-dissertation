@@ -4,17 +4,24 @@ from __future__ import annotations
 
 from typing import List, Optional, Literal
 from pydantic import BaseModel, Field, ConfigDict
+from typing import List, Optional, Literal
+from pydantic import BaseModel, Field, ConfigDict
 
-RiskLevel = Literal["unknown", "low", "medium", "high"]
+RiskLevel = Literal["unknown", "low", "medium", "high", "critical"]
+RiskSeverity = Literal["unknown", "low", "medium", "high", "critical"]
 EmailStatus = Literal["draft", "enriched", "replied"]
+
+class EmailRiskTag(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    tag: str
+    severity: RiskSeverity = "unknown"
 
 
 class EmailRisk(BaseModel):
     model_config = ConfigDict(extra="ignore")
     level: RiskLevel = "unknown"
-    flags: List[str] = Field(default_factory=list)
+    tags: List[EmailRiskTag] = Field(default_factory=list)
     summary: Optional[str] = None
-
 
 class EmailItem(BaseModel):
     """

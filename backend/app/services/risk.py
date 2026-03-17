@@ -192,6 +192,18 @@ def _build_summary(
 
     return None
 
+def _build_risk_tag_items(
+    tags: List[str],
+    tag_severity_map: Dict[str, str],
+) -> List[Dict[str, str]]:
+    items: List[Dict[str, str]] = []
+    for tag in tags:
+        items.append({
+            "tag": tag,
+            "severity": tag_severity_map.get(tag, "unknown"),
+        })
+    return items
+
 
 def analyze_risks(normalized_facts: Dict[str, Any], raw_message: str = "") -> Dict[str, Any]:
     """
@@ -238,6 +250,11 @@ def analyze_risks(normalized_facts: Dict[str, Any], raw_message: str = "") -> Di
         tag_severity_map=tag_severity_map,
     )
 
+    risk_tag_items = _build_risk_tag_items(
+        tags=risk_tags,
+        tag_severity_map=tag_severity_map,
+    )
+
     summary = _build_summary(
         tags=risk_tags,
         module_results=module_results,
@@ -249,7 +266,7 @@ def analyze_risks(normalized_facts: Dict[str, Any], raw_message: str = "") -> Di
         "risk_tags": risk_tags,
         "risk": {
             "level": decision_result["level"],
-            "flags": risk_tags,
+            "tags": risk_tag_items,
             "summary": summary,
         },
         "by_category": by_category,

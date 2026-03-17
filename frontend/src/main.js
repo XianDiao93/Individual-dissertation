@@ -41,7 +41,7 @@ const viewEmailDetail = document.getElementById("view-email-detail");
 const profileBackBtn = document.getElementById("profileBackBtn");
 const emailDetailBackBtn = document.getElementById("emailDetailBackBtn");
 
-// Email detail fields (existing placeholder ids)
+// Email detail fields
 const emailDetailTitle = document.getElementById("emailDetailTitle");
 const emailDetailFrom = document.getElementById("emailDetailFrom");
 const emailDetailCustomerType = document.getElementById("emailDetailCustomerType");
@@ -49,7 +49,7 @@ const emailDetailFiles = document.getElementById("emailDetailFiles");
 const emailDetailRisks = document.getElementById("emailDetailRisks");
 const emailDetailDeleteBtn = document.getElementById("emailDetailDeleteBtn");
 
-// Profile fields (if present in your index.html)
+// Profile fields
 const profileStatus = document.getElementById("profileStatus");
 const profileUid = document.getElementById("profileUid");
 const profileUserName = document.getElementById("profileUserName");
@@ -68,19 +68,54 @@ function getToken() {
 
 function authHeaders() {
     const token = getToken();
-    return token ? { "Authorization": "Bearer " + token } : {};
+    return token ? { Authorization: "Bearer " + token } : {};
 }
 
 async function fetchJson(url, options = {}) {
     const res = await fetch(url, options);
     if (!res.ok) {
         let detail = "";
-        try { detail = await res.text(); } catch {}
-        const err = new Error(`Request failed with status ${res.status}` + (detail ? `: ${detail}` : ""));
+        try {
+            detail = await res.text();
+        } catch {}
+        const err = new Error(
+            `Request failed with status ${res.status}` + (detail ? `: ${detail}` : "")
+        );
         err.status = res.status;
         throw err;
     }
     return res.json();
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+}
+
+function getSeverityClass(severity) {
+    const s = String(severity || "unknown").toLowerCase();
+    if (s === "critical" || s === "high") return "risk-high";
+    if (s === "medium") return "risk-medium";
+    if (s === "low") return "risk-low";
+    return "risk-unknown";
+}
+
+function renderRiskTags(tags) {
+    if (!Array.isArray(tags) || !tags.length) {
+        return `<span class="risk-tag risk-unknown">unknown</span>`;
+    }
+
+    return tags
+        .map((item) => {
+            const tag = typeof item === "string" ? item : (item.tag || "unknown");
+            const severity = typeof item === "string" ? "unknown" : (item.severity || "unknown");
+            return `<span class="risk-tag ${getSeverityClass(severity)}">${escapeHtml(tag)}</span>`;
+        })
+        .join(" ");
 }
 
 /* =========================
@@ -122,30 +157,31 @@ if (docTypeSelect) {
 /* =========================
    Existing: Mode switching
 ========================= */
-tabs.forEach(tab => {
+tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
         const mode = tab.dataset.mode;
         if (mode === currentMode) return;
 
         currentMode = mode;
-        tabs.forEach(t => t.classList.toggle("active", t === tab));
+        tabs.forEach((t) => t.classList.toggle("active", t === tab));
 
-        document.getElementById("mode-communication").style.display = mode === "communication" ? "block" : "none";
-        document.getElementById("mode-document").style.display = mode === "document" ? "block" : "none";
+        document.getElementById("mode-communication").style.display =
+            mode === "communication" ? "block" : "none";
+        document.getElementById("mode-document").style.display =
+            mode === "document" ? "block" : "none";
 
         responseBody.textContent = "The AI response will appear here.";
     });
 });
 
 /* =========================
-   Backend call (existing)
+   Backend call
 ========================= */
 async function callBackend() {
     btnSubmit.disabled = true;
     btnSubmit.textContent = "Processing...";
 
     try {
-        // communication
         if (currentMode === "communication") {
             const message = document.getElementById("commMessage").value.trim();
             const language = document.getElementById("commLanguage").value;
@@ -171,7 +207,6 @@ async function callBackend() {
             return;
         }
 
-        // document (pdf)
         if (currentMode === "document") {
             const docType = document.getElementById("docType").value;
             const currency = document.getElementById("docCurrency").value;
@@ -202,7 +237,10 @@ async function callBackend() {
             formData.append("payment_term", paymentTerm);
             formData.append("extra_notes", extra);
 
-            if ((docType === "sales_contract" || docType === "quotation") && templateFileInput.files.length > 0) {
+            if (
+                (docType === "sales_contract" || docType === "quotation") &&
+                templateFileInput.files.length > 0
+            ) {
                 formData.append("template_file", templateFileInput.files[0]);
             }
 
@@ -221,7 +259,8 @@ async function callBackend() {
                     throw new Error(`Request failed with status ${res.status}: ${detail}`);
                 }
 
-                const desc = res.headers.get("X-Doc-Description") || "Document PDF has been generated.";
+                const desc =
+                    res.headers.get("X-Doc-Description") || "Document PDF has been generated.";
 
                 const blob = await res.blob();
                 const url = URL.createObjectURL(blob);
@@ -241,7 +280,6 @@ async function callBackend() {
 
             return;
         }
-
     } catch (err) {
         responseBody.textContent = "Error: " + err.message;
     } finally {
@@ -253,12 +291,13 @@ async function callBackend() {
 btnSubmit.addEventListener("click", callBackend);
 
 /* =========================
-   Existing: Clear inputs
+   Clear inputs
 ========================= */
 btnClear.addEventListener("click", () => {
     if (currentMode === "communication") {
         document.getElementById("commMessage").value = "";
     }
+
     if (currentMode === "document") {
         [
             "docSeller",
@@ -268,8 +307,10 @@ btnClear.addEventListener("click", () => {
             "docUnitPrice",
             "docIncoterm",
             "docPaymentTerm",
-            "docExtra"
-        ].forEach(id => { document.getElementById(id).value = ""; });
+            "docExtra",
+        ].forEach((id) => {
+            document.getElementById(id).value = "";
+        });
 
         const tplInput = document.getElementById("docTemplate");
         if (tplInput) tplInput.value = "";
@@ -295,7 +336,7 @@ async function login() {
         const res = await fetch(API_BASE_URL + "/api/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_name: userName, password })
+            body: JSON.stringify({ user_name: userName, password }),
         });
 
         const data = await res.json();
@@ -325,7 +366,7 @@ function logout() {
     if (token) {
         fetch(API_BASE_URL + "/api/auth/logout", {
             method: "POST",
-            headers: { "Authorization": "Bearer " + token }
+            headers: { Authorization: "Bearer " + token },
         }).catch(() => {});
     }
 
@@ -351,7 +392,7 @@ window.addEventListener("DOMContentLoaded", async () => {
    Profile loading
 ========================= */
 async function loadProfile() {
-    if (!profileStatus) return; // profile UI not present
+    if (!profileStatus) return;
 
     const token = getToken();
     if (!token) {
@@ -392,7 +433,7 @@ async function loadProfile() {
 }
 
 /* =========================
-   Emails: list + detail (NEW)
+   Emails: list + detail
 ========================= */
 async function renderEmailsList() {
     const token = getToken();
@@ -412,11 +453,10 @@ async function renderEmailsList() {
             method: "GET",
             headers: {
                 ...authHeaders(),
-            }
+            },
         });
 
         if (!data.ok) {
-            // token may be invalid
             unarchivedCountEl.textContent = "0";
             emailsListEl.innerHTML = "";
             emailsEmptyEl.style.display = "block";
@@ -446,9 +486,14 @@ async function renderEmailsList() {
 
             const meta = document.createElement("div");
             meta.className = "m";
+
             const fromText = e.from || "-";
-            const riskText = e.risk_level || "unknown";
-            meta.textContent = `${fromText} · risk:${riskText} · ${e.status || "draft"}`;
+            const riskTags = Array.isArray(e.risk_tags) ? e.risk_tags : [];
+            const tagsHtml = renderRiskTags(riskTags);
+
+            meta.innerHTML = `
+                ${escapeHtml(fromText)} · ${tagsHtml} · ${escapeHtml(e.status || "draft")}
+            `;
 
             item.appendChild(title);
             item.appendChild(meta);
@@ -470,12 +515,11 @@ async function openEmailDetail(emailId) {
 
     selectedEmailId = emailId;
 
-    // Fill placeholders quickly while loading
     emailDetailTitle.textContent = `Email ${emailId}`;
     emailDetailFrom.textContent = "-";
     emailDetailCustomerType.textContent = "-";
     emailDetailFiles.textContent = "-";
-    emailDetailRisks.textContent = "-";
+    emailDetailRisks.innerHTML = `<span class="risk-tag risk-unknown">loading...</span>`;
     emailDetailBodyBox.textContent = "(loading...)";
     emailDetailReplyBox.textContent = "No reply";
 
@@ -486,7 +530,7 @@ async function openEmailDetail(emailId) {
             method: "GET",
             headers: {
                 ...authHeaders(),
-            }
+            },
         });
 
         if (!data.ok) {
@@ -510,27 +554,28 @@ async function openEmailDetail(emailId) {
 
         const risk = e.risk || {};
         const level = risk.level || "unknown";
-        const flags = Array.isArray(risk.flags) ? risk.flags : [];
-        const summary = risk.summary || null;
+        const tags = Array.isArray(risk.tags) ? risk.tags : [];
 
-        const riskLine = [
-            `level:${level}`,
-            flags.length ? `flags:${flags.join(", ")}` : null,
-            summary ? `summary:${summary}` : null,
-        ].filter(Boolean).join(" · ");
+        const tagsHtml = renderRiskTags(tags);
 
-        emailDetailRisks.textContent = riskLine || "level:unknown";
 
-        // ✅ Fill Body + Reply boxes
-        const body = (e.body && String(e.body).trim()) ? e.body : "(empty)";
-        const reply = (e.reply && String(e.reply).trim()) ? e.reply : "No reply";
+        emailDetailRisks.innerHTML = `
+            <span class="risk-tag ${getSeverityClass(level)}">level:${escapeHtml(level)}</span>
+            ${tagsHtml}
+        `;
+
+        const body = e.body && String(e.body).trim() ? e.body : "(empty)";
+        const reply = e.reply && String(e.reply).trim() ? e.reply : "No reply";
         emailDetailBodyBox.textContent = body;
         emailDetailReplyBox.textContent = reply;
-
     } catch (err) {
-        const msg = (err && err.message) ? err.message : String(err);
+        const msg = err && err.message ? err.message : String(err);
 
-        if (msg.includes("no such file") || msg.includes("email not found") || msg.includes("404")) {
+        if (
+            msg.includes("no such file") ||
+            msg.includes("email not found") ||
+            msg.includes("404")
+        ) {
             alert(`Email ${emailId} no longer exists (it may have been deleted).`);
             selectedEmailId = null;
             showView("home");
@@ -554,6 +599,7 @@ navProfileBtn.addEventListener("click", async () => {
 
 profileBackBtn.addEventListener("click", () => showView("home"));
 emailDetailBackBtn.addEventListener("click", () => showView("home"));
+
 emailDetailDeleteBtn.addEventListener("click", async () => {
     const token = getToken();
     if (!token) return;
@@ -563,7 +609,9 @@ emailDetailDeleteBtn.addEventListener("click", async () => {
         return;
     }
 
-    const ok = confirm(`Delete email ${selectedEmailId}? This will remove the JSON file from user_data.`);
+    const ok = confirm(
+        `Delete email ${selectedEmailId}? This will remove the JSON file from user_data.`
+    );
     if (!ok) return;
 
     try {
@@ -589,10 +637,12 @@ emailDetailDeleteBtn.addEventListener("click", async () => {
         if (node) node.remove();
 
         const cur = parseInt(unarchivedCountEl.textContent || "0", 10);
-        if (!Number.isNaN(cur) && cur > 0) unarchivedCountEl.textContent = String(cur - 1);
+        if (!Number.isNaN(cur) && cur > 0) {
+            unarchivedCountEl.textContent = String(cur - 1);
+        }
 
         if (!emailsListEl.querySelector(".sidebar-item")) {
-        emailsEmptyEl.style.display = "block";
+            emailsEmptyEl.style.display = "block";
         }
 
         showView("home");

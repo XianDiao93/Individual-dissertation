@@ -9,11 +9,12 @@
     "status": "draft",
     "risk": {
         "level": "high",
-        "flags": [
-            "incomplete_buyer_profile",
-            "unverified_counterparty"
+        "tags": [
+            { "tag": "fraud_scam_risk", "severity": "high" },
+            { "tag": "weak_legal_enforcement", "severity": "high" },
+            { "tag": "underdeveloped_economy", "severity": "medium" }
         ],
-        "summary": "Intent/conversation risk tags matched: incomplete_buyer_profile. Transaction/fraud risk tags matched: unverified_counterparty."
+        "summary": "..."
     },
     "id": "00004"
 }
