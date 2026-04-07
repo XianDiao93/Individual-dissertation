@@ -1,0 +1,33 @@
+{
+    "source_region": "GB",
+    "language": "auto",
+    "subject": null,
+    "body": "Dear Friend,\nWe need your products urgently. Payment will be made by USDT or Bitcoin only.\nPlease send invoice immediately and use a private account for faster settlement.\nWaiting for your urgent reply.",
+    "reply": "Dear [Recipient],\n\nThank you for your message. However, I must express my concerns regarding the proposed payment method and the urgency indicated in your request. For the sake of compliance and security, we only accept more conventional payment options through verified channels.\n\nAdditionally, could you please confirm your company name and location? This will help us ensure a safe and smooth transaction process.\n\nI look forward to your prompt reply.\n\nXian Diao\nDIOX Ltd.\nadmin@example.com\n+44 1234567890",
+    "group_id": null,
+    "from": null,
+    "status": "replied",
+    "risk": {
+        "level": "critical",
+        "tags": [
+            {
+                "tag": "incomplete_buyer_profile",
+                "severity": "low"
+            },
+            {
+                "tag": "possible_scam_pattern",
+                "severity": "high"
+            },
+            {
+                "tag": "suspicious_urgency",
+                "severity": "medium"
+            },
+            {
+                "tag": "unverified_counterparty",
+                "severity": "high"
+            }
+        ],
+        "summary": "Intent/conversation risk tags matched: incomplete_buyer_profile. Transaction/fraud risk tags matched: possible_scam_pattern, suspicious_urgency, unverified_counterparty. Buyer/sender country is not yet confirmed."
+    },
+    "id": "00003"
+}

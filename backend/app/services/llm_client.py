@@ -1,11 +1,12 @@
 # backend/app/services/llm_client.py
 import json
 import os
+import re
+from functools import lru_cache
 from pathlib import Path
 from typing import Optional
+
 from openai import OpenAI
-from functools import lru_cache
-import re
 
 from app.models.doc_model import BaseDocumentData, DocumentType
 from app.config import CHAT_BASIC_PROMPT_PATH, DOC_BASIC_PROMPT_PATH
@@ -20,18 +21,190 @@ if not OPENAI_API_KEY:
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-# load basic promts from database
+
 @lru_cache(maxsize=8)
 def _load_chat_prompt_bundle() -> dict:
     path = Path(CHAT_BASIC_PROMPT_PATH)
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
+
 @lru_cache(maxsize=8)
 def _load_doc_prompt_bundle() -> dict:
     path = Path(DOC_BASIC_PROMPT_PATH)
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def _has_flag(flags: list[str], target: str) -> bool:
+    return target in flags
+
+
+def _is_empty(value: object) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return value.strip() == ""
+    return False
+
+
+def _normalize_optional_text(value: Optional[str]) -> Optional[str]:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        value = str(value)
+    value = value.strip()
+    if value == "" or value.lower() == "null":
+        return None
+    return value
+
+
+def _join_rules(lines: list[str]) -> str:
+    clean_lines = [str(line).strip() for line in lines if str(line).strip()]
+    if not clean_lines:
+        return "- None."
+    return "\n".join(f"- {line}" for line in clean_lines)
+
+
+def _build_identity_block(
+    *,
+    user_name: Optional[str],
+    name: Optional[str],
+    company_name: Optional[str],
+    email: Optional[str],
+    phone: Optional[str],
+    region: str,
+) -> str:
+    lines = [
+        f"Preferred display name: {name if name else 'NOT PROVIDED'}",
+        f"Company name: {company_name if company_name else 'NOT PROVIDED'}",
+        f"Account user name: {user_name if user_name else 'NOT PROVIDED'}",
+        f"Contact email: {email if email else 'NOT PROVIDED'}",
+        f"Contact phone: {phone if phone else 'NOT PROVIDED'}",
+        f"Sender region hint: {region if region else 'NOT PROVIDED'}",
+    ]
+    return "\n".join(lines)
+
+
+def _build_country_guidance(bundle: dict, safe_facts: dict) -> str:
+    country_rules = bundle.get("country_rules", {})
+
+    ambiguity_flags = safe_facts.get("ambiguity_flags", [])
+    if not isinstance(ambiguity_flags, list):
+        ambiguity_flags = []
+
+    origin_country_name = safe_facts.get("origin_country_name", "")
+    origin_country_code = safe_facts.get("origin_country_code", "")
+    destination_country_name = safe_facts.get("destination_country_name", "")
+    destination_country_code = safe_facts.get("destination_country_code", "")
+
+    lines: list[str] = []
+
+    if _has_flag(ambiguity_flags, "origin_country_ambiguous"):
+        lines.extend(country_rules.get("origin_ambiguous", []))
+
+    if _has_flag(ambiguity_flags, "destination_country_ambiguous"):
+        lines.extend(country_rules.get("destination_ambiguous", []))
+
+    if _is_empty(origin_country_code):
+        lines.extend(country_rules.get("origin_missing", []))
+    else:
+        lines.append(f"Detected buyer or sender country code: {origin_country_code}.")
+        if not _is_empty(origin_country_name):
+            lines.append(f"Detected buyer or sender country name: {origin_country_name}.")
+        lines.extend(country_rules.get("origin_present", []))
+
+    if _is_empty(destination_country_code) and _is_empty(destination_country_name):
+        lines.extend(country_rules.get("destination_missing", []))
+    else:
+        if not _is_empty(destination_country_code):
+            lines.append(f"Detected destination country code: {destination_country_code}.")
+        if not _is_empty(destination_country_name):
+            lines.append(f"Detected destination country name: {destination_country_name}.")
+        lines.extend(country_rules.get("destination_present", []))
+
+    return _join_rules(lines)
+
+
+def _build_reply_rule_block(bundle: dict) -> str:
+    rule_cfg = bundle.get("reply_rules", {})
+    lines: list[str] = []
+    lines.extend(rule_cfg.get("normal", []))
+    lines.extend(rule_cfg.get("identity", []))
+    lines.extend(rule_cfg.get("greeting", []))
+    lines.extend(rule_cfg.get("opening", []))
+    lines.extend(rule_cfg.get("closing", []))
+    return _join_rules(lines)
+
+
+def _resolve_output_language(
+    requested_language: str,
+    normalized_facts: Optional[dict],
+    message: str,
+) -> str:
+    """
+    Decide the reply language before calling the LLM.
+
+    Priority:
+    1. Explicit language from caller (if not 'auto')
+    2. Buyer/sender country from extracted facts
+    3. Lightweight fallback heuristic from message language
+    4. English default
+    """
+    lang = (requested_language or "auto").strip().lower()
+    if lang and lang != "auto":
+        return lang
+
+    facts = normalized_facts or {}
+
+    origin_code = str(facts.get("origin_country_code") or "").strip().upper()
+    origin_name = str(facts.get("origin_country_name") or "").strip().upper()
+
+    country_to_lang = {
+        "FR": "fr",
+        "FRANCE": "fr",
+        "DE": "de",
+        "GERMANY": "de",
+        "ES": "es",
+        "SPAIN": "es",
+        "IT": "it",
+        "ITALY": "it",
+        "CN": "zh",
+        "CHINA": "zh",
+        "JP": "ja",
+        "JAPAN": "ja",
+        "GB": "en",
+        "UK": "en",
+        "UNITED KINGDOM": "en",
+        "US": "en",
+        "USA": "en",
+        "UNITED STATES": "en",
+    }
+
+    if origin_code in country_to_lang:
+        return country_to_lang[origin_code]
+
+    if origin_name in country_to_lang:
+        return country_to_lang[origin_name]
+
+    text = (message or "").lower()
+
+    # lightweight fallback only when country is unavailable
+    if any(token in text for token in ["bonjour", "merci", "cordialement", "bien à vous"]):
+        return "fr"
+    if any(token in text for token in ["guten tag", "danke", "mit freundlichen grüßen"]):
+        return "de"
+    if any(token in text for token in ["hola", "gracias", "saludos", "atentamente"]):
+        return "es"
+    if any(token in text for token in ["ciao", "grazie", "cordiali saluti"]):
+        return "it"
+    if any(token in text for token in ["你好", "谢谢", "此致", "敬礼"]):
+        return "zh"
+    if any(token in text for token in ["こんにちは", "ありがとうございます", "よろしくお願いします"]):
+        return "ja"
+
+    return "en"
+
 
 def generate_business_reply(
     message: str,
@@ -41,20 +214,18 @@ def generate_business_reply(
     reply_form: str = "email",
     user_name: Optional[str] = None,
     name: Optional[str] = None,
+    company_name: Optional[str] = None,
     email: Optional[str] = None,
     phone: Optional[str] = None,
     normalized_facts: Optional[dict] = None,
     risk_result: Optional[dict] = None,
     model: str = "gpt-4o-mini",
 ) -> str:
-
-    # Normalize tone
-    tone_str = tone.lower()
+    tone_str = (tone or "formal").lower()
     if tone_str not in {"formal", "neutral", "friendly"}:
         tone_str = "formal"
 
-    # Normalize reply form
-    reply_form_norm = reply_form.lower()
+    reply_form_norm = (reply_form or "email").lower()
     if reply_form_norm not in {"email", "chat"}:
         reply_form_norm = "email"
 
@@ -65,70 +236,92 @@ def generate_business_reply(
     mode_cfg = modes.get(mode_key) or modes.get("email") or {}
 
     system_template = bundle.get("system_template", "")
+    section_cfg = bundle.get("user_sections", {})
 
-    # Clean identity fields
-    safe_user_name = user_name if user_name not in (None, "", "null") else None
-    safe_name = name if name not in (None, "", "null") else None
-    safe_email = email if email not in (None, "", "null") else None
-    safe_phone = phone if phone not in (None, "", "null") else None
-    safe_region = region if region not in (None, "", "null") else "GB"
+    safe_user_name = _normalize_optional_text(user_name)
+    safe_name = _normalize_optional_text(name)
+    safe_company_name = _normalize_optional_text(company_name)
+    safe_email = _normalize_optional_text(email)
+    safe_phone = _normalize_optional_text(phone)
+    safe_region = _normalize_optional_text(region) or "GB"
 
-    available_identity_lines = [
-        f"Preferred display name: {safe_name or 'N/A'}",
-        f"Account user name: {safe_user_name or 'N/A'}",
-        f"Contact email: {safe_email or 'N/A'}",
-        f"Contact phone: {safe_phone or 'N/A'}",
-        f"Sender region: {safe_region}",
-    ]
+    safe_facts = dict(normalized_facts or {})
+    ambiguity_flags = safe_facts.get("ambiguity_flags", [])
+    if not isinstance(ambiguity_flags, list):
+        safe_facts["ambiguity_flags"] = []
 
-    available_identity_block = "\n".join(available_identity_lines)
+    safe_risk = dict(risk_result or {})
 
-    # ---------- Risk context ----------
-    facts_block = json.dumps(normalized_facts or {}, indent=2)
-    risk_block = json.dumps(risk_result or {}, indent=2)
+    resolved_language = _resolve_output_language(
+        requested_language=language,
+        normalized_facts=safe_facts,
+        message=message,
+    )
+
+    facts_block = json.dumps(safe_facts, indent=2, ensure_ascii=False)
+    risk_block = json.dumps(safe_risk, indent=2, ensure_ascii=False)
 
     system_prompt = system_template.format(
         mode_description=mode_cfg.get("mode_description", ""),
         formatting_instructions=mode_cfg.get("formatting_instructions", ""),
-        language=language,
+        language=resolved_language,
         region=safe_region,
         tone_str=tone_str,
     )
 
-    user_content = (
-        f"User message (target region={safe_region}, tone={tone_str}, "
-        f"reply_form={reply_form_norm}, requested_language={language}):\n"
-        f"{message}\n\n"
+    identity_block = _build_identity_block(
+        user_name=safe_user_name,
+        name=safe_name,
+        company_name=safe_company_name,
+        email=safe_email,
+        phone=safe_phone,
+        region=safe_region,
+    )
 
-        "Extracted trade facts:\n"
+    country_guidance_block = _build_country_guidance(bundle, safe_facts)
+    reply_rules_block = _build_reply_rule_block(bundle)
+
+    message_header = section_cfg.get(
+        "message_header",
+        "User message (target region={region}, tone={tone}, reply_form={reply_form}, requested_language={language}):",
+    ).format(
+        region=safe_region,
+        tone=tone_str,
+        reply_form=reply_form_norm,
+        language=resolved_language,
+    )
+
+    facts_header = section_cfg.get("facts_header", "Extracted trade facts:")
+    risk_header = section_cfg.get("risk_header", "Risk assessment:")
+    country_header = section_cfg.get("country_header", "Country handling guidance:")
+    identity_header = section_cfg.get("identity_header", "Available sender information:")
+    task_header = section_cfg.get("task_header", "Task-specific reply instructions:")
+
+    user_content = (
+        f"{message_header}\n"
+        "---------------------------------\n"
+        f"{message}\n"
+        "---------------------------------\n\n"
+        f"{facts_header}\n"
         "---------------------------------\n"
         f"{facts_block}\n"
         "---------------------------------\n\n"
-
-        "Risk assessment:\n"
+        f"{risk_header}\n"
         "---------------------------------\n"
         f"{risk_block}\n"
         "---------------------------------\n\n"
-
-        "Instructions:\n"
-        "- If decision is CLEAR: respond normally.\n"
-        "- If decision is WARN: respond cautiously and request clarification.\n"
-        "- If decision is BLOCK: politely refuse the request due to compliance or regulatory concerns.\n"
-        "- Do not mention internal 'risk scoring systems'.\n"
-        "- Keep the reply natural and professional.\n\n"
-
-        "Available sender information:\n"
+        f"{country_header}\n"
         "---------------------------------\n"
-        f"{available_identity_block}\n"
+        f"{country_guidance_block}\n"
         "---------------------------------\n\n"
-
-        "Rules for sender information:\n"
-        "- Use sender details only if provided.\n"
-        "- Do not invent missing identity fields.\n"
-        "- Do not output placeholders such as [Your Name].\n"
-        "- If identity fields are missing, write a reply without them.\n"
-        "- Never output bracketed placeholders such as [Your Company Name], [Your Contact Information], or similar template text.\n"
-        "- If sender/company identity is missing, omit the signature details entirely and end with a natural generic closing.\n"
+        f"{identity_header}\n"
+        "---------------------------------\n"
+        f"{identity_block}\n"
+        "---------------------------------\n\n"
+        f"{task_header}\n"
+        "---------------------------------\n"
+        f"{reply_rules_block}\n"
+        "---------------------------------\n"
     )
 
     response = client.responses.create(
@@ -143,9 +336,8 @@ def generate_business_reply(
     if not reply_text:
         reply_text = str(response)
 
-    reply_text = _cleanup_template_placeholders(reply_text)
+    return _cleanup_generated_reply(reply_text, reply_form=reply_form_norm)
 
-    return reply_text
 
 def generate_document_text(
     data: BaseDocumentData,
@@ -154,61 +346,22 @@ def generate_document_text(
 ) -> str:
     """
     Use the LLM to generate the main body text of a trade document.
-
-    The model receives:
-        - document_type (sales_contract / quotation / product_manual)
-        - core structured fields (seller, buyer, product, price, terms, etc.)
-        - optional template_text as a structural / style reference
-
-    It should output a ready-to-use document body in plain text.
     """
-
     bundle = _load_doc_prompt_bundle()
-    
-    # High-level instruction depending on document type
+
     if data.document_type == DocumentType.sales_contract:
         modes = bundle.get("modes", {})
         doc_purpose = modes.get("sales_contract")
-        # doc_purpose = (
-        #     "Draft a clear and professional international sales contract between seller and buyer. "
-        #     "Use numbered clauses where appropriate."
-        # )
     elif data.document_type == DocumentType.quotation:
         modes = bundle.get("modes", {})
         doc_purpose = modes.get("quotation")
-        # doc_purpose = (
-        #     "Draft a clear and professional quotation for the buyer, with pricing, terms and validity. "
-        #     "You may use simple headings but keep it concise."
-        # )
     else:
-        # product_manual
         modes = bundle.get("modes", {})
         doc_purpose = modes.get("product_manual")
-        # doc_purpose = (
-        #     "Draft a structured product manual / instruction document. "
-        #     "It should have clear sections, such as Overview, Parts and functions, "
-        #     "Usage, Safety instructions and Warranty."
-        # )
 
     system_template = bundle.get("system_template", "")
-    system_prompt = system_template.format(
-        purpose = doc_purpose
-    )
-    # system_prompt = (
-    #     "You are an AI assistant helping SMEs with international trade documentation.\n\n"
-    #     "Your task is to generate high-quality, professional text for trade documents "
-    #     "(contracts, quotations, product manuals). You must:\n"
-    #     "- Use clear, formal business language.\n"
-    #     "- Organise the content with logical sections and paragraphs.\n"
-    #     "- Do NOT add any placeholder like 'Lorem ipsum'; always use meaningful text.\n\n"
-    #     f"Specific goal for this document:\n{doc_purpose}\n\n"
-    #     "If a reference template is provided, you should:\n"
-    #     "- Follow its overall structure and headings as much as reasonable.\n"
-    #     "- Fill in any placeholders with the given data.\n"
-    #     "- Improve clarity and consistency where needed.\n"
-    # )
+    system_prompt = system_template.format(purpose=doc_purpose)
 
-    # Build a compact description of the structured data
     meta_lines = [
         f"Document type: {data.document_type.value}",
         f"Seller: {data.seller_name}",
@@ -257,7 +410,8 @@ def generate_document_text(
 
     return doc_text
 
-def _cleanup_template_placeholders(text: str) -> str:
+
+def _cleanup_generated_reply(text: str, reply_form: str = "email") -> str:
     if not text:
         return text
 
@@ -278,17 +432,56 @@ def _cleanup_template_placeholders(text: str) -> str:
         "[Company Address]",
         "[Contact Information]",
         "[Contact Info]",
+        "[Recipient]",
+        "[Customer Name]",
+        "[Client Name]",
+        "[Dear recipient]",
     ]
 
     for marker in banned_markers:
         text = text.replace(marker, "")
 
-    # 更通用：删掉形如 [Your ...] / [Company ...] / [Contact ...] 的模板占位符
-    text = re.sub(r"\[(?:Your|Company|Contact)[^\]]*\]", "", text, flags=re.IGNORECASE)
+    text = re.sub(
+        r"\[(?:your|company|contact|recipient|customer|client)[^\]]*\]",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
 
-    # 清理因为替换占位符留下的多余空格
+    if reply_form == "email":
+        email_header_patterns = [
+            r"(?im)^\s*subject\s*:\s*.*(?:\n|$)",
+            r"(?im)^\s*re\s*:\s*.*(?:\n|$)",
+            r"(?im)^\s*fw\s*:\s*.*(?:\n|$)",
+            r"(?im)^\s*fwd\s*:\s*.*(?:\n|$)",
+            r"(?im)^\s*to\s*:\s*.*(?:\n|$)",
+            r"(?im)^\s*from\s*:\s*.*(?:\n|$)",
+            r"(?im)^\s*cc\s*:\s*.*(?:\n|$)",
+            r"(?im)^\s*bcc\s*:\s*.*(?:\n|$)",
+            r"(?im)^\s*date\s*:\s*.*(?:\n|$)",
+        ]
+        for pattern in email_header_patterns:
+            text = re.sub(pattern, "", text)
+
     text = re.sub(r"[ \t]+\n", "\n", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
     text = re.sub(r"[ \t]{2,}", " ", text)
 
-    return text.strip()
+    lines = [line.rstrip() for line in text.splitlines()]
+
+    while lines and not lines[0].strip():
+        lines.pop(0)
+
+    while lines and not lines[-1].strip():
+        lines.pop()
+
+    cleaned = "\n".join(lines).strip()
+
+    cleaned = re.sub(
+        r"(?im)(?:\n|^)\s*(best regards|kind regards|regards|sincerely|yours sincerely|yours faithfully|warm regards),\s*$",
+        lambda m: ("\n" if "\n" in m.group(0) else "") + f"{m.group(1).title()}.",
+        cleaned,
+    )
+
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
+    return cleaned

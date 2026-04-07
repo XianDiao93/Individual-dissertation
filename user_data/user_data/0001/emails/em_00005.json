@@ -1,0 +1,29 @@
+{
+    "source_region": "FR",
+    "language": "auto",
+    "subject": null,
+    "body": "Bonjour,\nWe are based in France but please reply in English. We are interested in your products and would like to receive more details.\nRegards,\nJean,\nFrance",
+    "reply": "Dear Jean,\n\nThank you for your interest in our products. However, given the current circumstances regarding our compliance policies, we cannot proceed with your request without additional verification.\n\nIf you can provide more information about your company and its operations, it would help us assist you further.\n\nXian Diao\nDIOX Ltd.",
+    "group_id": null,
+    "from": null,
+    "status": "replied",
+    "risk": {
+        "level": "high",
+        "tags": [
+            {
+                "tag": "incomplete_buyer_profile",
+                "severity": "low"
+            },
+            {
+                "tag": "mass_inquiry",
+                "severity": "unknown"
+            },
+            {
+                "tag": "unverified_counterparty",
+                "severity": "high"
+            }
+        ],
+        "summary": "Intent/conversation risk tags matched: incomplete_buyer_profile, mass_inquiry. Transaction/fraud risk tags matched: unverified_counterparty."
+    },
+    "id": "00005"
+}

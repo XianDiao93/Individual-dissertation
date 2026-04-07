@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from functools import lru_cache
 from typing import Any, Dict, Optional
 
@@ -63,64 +64,112 @@ def _build_prompts(
     return system_prompt, user_prompt, bundle
 
 
-@lru_cache(maxsize=1)
-def _load_country_codes() -> Dict[str, str]:
-    if not COUNTRY_CODES_PATH.exists():
-        return {}
-
-    with COUNTRY_CODES_PATH.open("r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    if not isinstance(data, dict):
-        return {}
-
-    return {str(code).upper(): str(name) for code, name in data.items()}
+def _strip_accents(text: str) -> str:
+    return "".join(
+        ch for ch in unicodedata.normalize("NFKD", text)
+        if not unicodedata.combining(ch)
+    )
 
 
 def _normalize_country_key(text: str) -> str:
-    text = (text or "").strip().lower()
-    text = text.replace("&", "and")
-    text = re.sub(r"[()_,./\-]+", " ", text)
+    text = (text or "").strip()
+    if not text:
+        return ""
+
+    text = _strip_accents(text)
+    text = text.lower()
+    text = text.replace("&", " and ")
+
+    text = re.sub(r"[’'`´]", "", text)
+    text = re.sub(r"[()_,./\\\-]+", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
     return text
 
 
 @lru_cache(maxsize=1)
-def _build_country_name_lookup() -> Dict[str, str]:
-    code_to_name = _load_country_codes()
-    lookup: Dict[str, str] = {}
+def _load_country_data() -> tuple[Dict[str, str], Dict[str, str]]:
+    """
+    读取 country_codes.json，返回：
+    - canonical_names: { "US": "United States", ... }
+    - alias_lookup: { normalized_alias: "US", ... }
 
-    for code, name in code_to_name.items():
+    兼容两种格式：
+    1) 新格式：
+       {
+         "canonical_names": { "US": "United States" },
+         "aliases": { "USA": "US", "America": "US" }
+       }
+
+    2) 旧格式：
+       {
+         "US": "United States",
+         "GB": "United Kingdom"
+       }
+    """
+    if not COUNTRY_CODES_PATH.exists():
+        return {}, {}
+
+    with COUNTRY_CODES_PATH.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    if not isinstance(data, dict):
+        return {}, {}
+
+    canonical_names: Dict[str, str] = {}
+    alias_lookup: Dict[str, str] = {}
+
+    if "canonical_names" in data or "aliases" in data:
+        raw_canonical = data.get("canonical_names", {})
+        raw_aliases = data.get("aliases", {})
+
+        if not isinstance(raw_canonical, dict):
+            raw_canonical = {}
+        if not isinstance(raw_aliases, dict):
+            raw_aliases = {}
+
+        for code, name in raw_canonical.items():
+            code_str = str(code).strip().upper()
+            name_str = str(name).strip()
+            if code_str:
+                canonical_names[code_str] = name_str
+
+        for alias, code in raw_aliases.items():
+            alias_str = str(alias).strip()
+            code_str = str(code).strip().upper()
+            if not alias_str or not code_str:
+                continue
+            alias_lookup[_normalize_country_key(alias_str)] = code_str
+
+    else:
+        for code, name in data.items():
+            code_str = str(code).strip().upper()
+            name_str = str(name).strip()
+            if code_str:
+                canonical_names[code_str] = name_str
+
+    for code, name in canonical_names.items():
         norm_name = _normalize_country_key(name)
         if norm_name:
-            lookup[norm_name] = code
+            alias_lookup[norm_name] = code
 
-    aliases = {
-        "uk": "GB",
-        "u.k.": "GB",
-        "britain": "GB",
-        "great britain": "GB",
-        "england": "GB",
-        "usa": "US",
-        "u.s.": "US",
-        "u.s.a.": "US",
-        "united states of america": "US",
-        "uae": "AE",
-        "u.a.e.": "AE",
-        "south korea": "KR",
-        "north korea": "KP",
-        "dr congo": "CD",
-        "drc": "CD",
-        "democratic republic of the congo": "CD",
-        "congo drc": "CD",
-        "ivory coast": "CI",
-        "czechia": "CZ",
-    }
+        alias_lookup[_normalize_country_key(code)] = code
 
-    for alias, code in aliases.items():
-        lookup[_normalize_country_key(alias)] = code
+    return canonical_names, alias_lookup
 
-    return lookup
+
+def _clean_str(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        value = value.strip()
+        if value.lower() in {"none", "null", "n/a", "unknown", "not provided"}:
+            return ""
+        return value
+    return str(value).strip()
+
+
+def _is_ambiguous_country_value(value: Any) -> bool:
+    return _clean_str(value).lower() == "ambiguous"
 
 
 def _country_name_to_code(country_name: str) -> str:
@@ -128,23 +177,42 @@ def _country_name_to_code(country_name: str) -> str:
         return ""
 
     raw = country_name.strip()
-    upper = raw.upper()
+    if not raw:
+        return ""
 
-    code_to_name = _load_country_codes()
-    if upper in code_to_name:
+    if _is_ambiguous_country_value(raw):
+        return ""
+
+    canonical_names, alias_lookup = _load_country_data()
+
+    upper = raw.upper()
+    if upper in canonical_names:
         return upper
 
-    lookup = _build_country_name_lookup()
     norm = _normalize_country_key(raw)
+    if not norm:
+        return ""
 
-    if norm in lookup:
-        return lookup[norm]
+    code = alias_lookup.get(norm)
+    if code:
+        return code
 
-    for known_name, code in lookup.items():
-        if norm == known_name or norm in known_name or known_name in norm:
-            return code
+    for known_alias, known_code in alias_lookup.items():
+        if norm == known_alias:
+            return known_code
+
+    for known_alias, known_code in alias_lookup.items():
+        if norm in known_alias or known_alias in norm:
+            return known_code
 
     return ""
+
+
+def _code_to_canonical_country_name(code: str) -> str:
+    if not code:
+        return ""
+    canonical_names, _ = _load_country_data()
+    return canonical_names.get(code.strip().upper(), "")
 
 
 def _strip_code_fences(text: str) -> str:
@@ -190,17 +258,6 @@ def _safe_json_loads(text: str) -> Dict[str, Any]:
     return {}
 
 
-def _clean_str(value: Any) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, str):
-        value = value.strip()
-        if value.lower() in {"none", "null", "n/a", "unknown", "not provided"}:
-            return ""
-        return value
-    return str(value).strip()
-
-
 def _guess_message_type(raw_message: str, llm_value: str) -> str:
     val = _clean_str(llm_value).lower()
     if val in {"email", "chat"}:
@@ -223,12 +280,32 @@ def _guess_message_type(raw_message: str, llm_value: str) -> str:
 
 
 def _detect_missing_fields(data: Dict[str, Any]) -> list[str]:
+    """
+    当前业务重点：
+    1. 买家 / 来信方所在地（origin_country_code）
+    2. 产品信息（product_requested）
+
+    destination_country_code 继续保留在结构里，但不再作为当前主缺失项。
+    recipient_address 视为可选保留检查项；如果你后面不想追问地址，也可删掉。
+    """
     important_fields = [
         "product_requested",
-        "destination_country_code",
+        "origin_country_code",
         "recipient_address",
     ]
     return [field for field in important_fields if not _clean_str(data.get(field))]
+
+
+def _detect_ambiguity_flags(data: Dict[str, Any]) -> list[str]:
+    flags: list[str] = []
+
+    if _is_ambiguous_country_value(data.get("origin_country_name")):
+        flags.append("origin_country_ambiguous")
+
+    if _is_ambiguous_country_value(data.get("destination_country_name")):
+        flags.append("destination_country_ambiguous")
+
+    return flags
 
 
 def _ensure_required_fields(
@@ -242,6 +319,35 @@ def _ensure_required_fields(
     return result
 
 
+def _normalize_country_fields(base: Dict[str, Any]) -> tuple[str, str, str, str]:
+    """
+    输入 LLM 返回的 origin/destination country name，
+    输出：
+    - origin_country_name（规范标准名，或 ambiguous）
+    - origin_country_code
+    - destination_country_name（规范标准名，或 ambiguous）
+    - destination_country_code
+    """
+    raw_origin = _clean_str(base.get("origin_country_name"))
+    raw_destination = _clean_str(base.get("destination_country_name"))
+
+    if _is_ambiguous_country_value(raw_origin):
+        origin_code = ""
+        origin_name = "ambiguous"
+    else:
+        origin_code = _country_name_to_code(raw_origin)
+        origin_name = _code_to_canonical_country_name(origin_code) or raw_origin
+
+    if _is_ambiguous_country_value(raw_destination):
+        destination_code = ""
+        destination_name = "ambiguous"
+    else:
+        destination_code = _country_name_to_code(raw_destination)
+        destination_name = _code_to_canonical_country_name(destination_code) or raw_destination
+
+    return origin_name, origin_code, destination_name, destination_code
+
+
 def _postprocess_extraction(
     raw_message: str,
     llm_data: Dict[str, Any],
@@ -250,8 +356,12 @@ def _postprocess_extraction(
 ) -> Dict[str, Any]:
     base = _ensure_required_fields(llm_data, required_fields, default_values)
 
-    origin_country_name = _clean_str(base.get("origin_country_name"))
-    destination_country_name = _clean_str(base.get("destination_country_name"))
+    (
+        origin_country_name,
+        origin_country_code,
+        destination_country_name,
+        destination_country_code,
+    ) = _normalize_country_fields(base)
 
     result: Dict[str, Any] = {
         "raw_text": raw_message,
@@ -260,9 +370,9 @@ def _postprocess_extraction(
         "product_requested": _clean_str(base.get("product_requested")),
         "quantity": _clean_str(base.get("quantity")),
         "origin_country_name": origin_country_name,
-        "origin_country_code": _country_name_to_code(origin_country_name),
+        "origin_country_code": origin_country_code,
         "destination_country_name": destination_country_name,
-        "destination_country_code": _country_name_to_code(destination_country_name),
+        "destination_country_code": destination_country_code,
         "recipient_address": _clean_str(base.get("recipient_address")),
         "sender_name": _clean_str(base.get("sender_name")),
         "sender_email": _clean_str(base.get("sender_email")),
@@ -271,6 +381,7 @@ def _postprocess_extraction(
     }
 
     result["missing_fields"] = _detect_missing_fields(result)
+    result["ambiguity_flags"] = _detect_ambiguity_flags(result)
     return result
 
 
@@ -300,6 +411,7 @@ def _build_empty_result(
     }
 
     result["missing_fields"] = _detect_missing_fields(result)
+    result["ambiguity_flags"] = []
     return result
 
 

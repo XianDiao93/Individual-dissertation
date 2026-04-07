@@ -49,7 +49,7 @@
                 <div id="groupsList" class="sidebar-list" style="display:none;"></div>
             </div>
 
-            <div class="sidebar-section">
+            <div class="sidebar-section scroll-section">
                 <div class="sidebar-section-title">
                     Unarchived
                     <span id="unarchivedCount" class="sidebar-hint">0</span>
@@ -68,7 +68,6 @@
 
         <!-- Main area -->
         <main class="workspace-main">
-            <!-- VIEW: HOME (your existing UI goes here unchanged) -->
             <section id="view-home" class="view">
                 <div class="app-shell">
                     <div class="card">
@@ -117,45 +116,10 @@
                                 <!-- Communication Mode -->
                                 <div id="mode-communication">
                                     <label>Customer Message</label>
-                                    <textarea id="commMessage"
-                                        placeholder="Example: Hello, we are interested in your LED panel lights. Could you provide pricing and MOQ for export to France?"></textarea>
-
-                                    <div style="display:flex; gap:8px; margin-top:8px;">
-                                        <div style="flex:1;">
-                                            <label>Language</label>
-                                            <select id="commLanguage">
-                                                <option value="auto">Auto Detect</option>
-                                                <option value="en">English</option>
-                                            </select>
-                                        </div>
-
-                                        <div style="flex:1;">
-                                            <label>Target Region</label>
-                                            <select id="commRegion">
-                                                <option value="EU">EU</option>
-                                                <option value="US">US</option>
-                                                <option value="ME">Middle East</option>
-                                                <option value="ASIA">Asia</option>
-                                            </select>
-                                        </div>
-
-                                        <div style="flex:1;">
-                                            <label>Tone</label>
-                                            <select id="commTone">
-                                                <option value="formal">Formal</option>
-                                                <option value="neutral">Neutral</option>
-                                                <option value="friendly">Friendly</option>
-                                            </select>
-                                        </div>
-
-                                        <div style="flex:1;">
-                                            <label>Reply form</label>
-                                            <select id="commReplyForm">
-                                                <option value="email">Email (formal business email)</option>
-                                                <option value="chat">Chat (short conversational reply)</option>
-                                            </select>
-                                        </div>
-                                    </div>
+                                    <textarea
+                                        id="commMessage"
+                                        placeholder="Example: Hello, we are interested in your LED panel lights. Could you provide pricing and MOQ for export to France?"
+                                    ></textarea>
                                 </div>
 
                                 <!-- Document mode -->
@@ -290,6 +254,7 @@
                         <div><span class="k">Username:</span> <span id="profileUserName">-</span></div>
                         <div><span class="k">Role:</span> <span id="profileRole">-</span></div>
                         <div><span class="k">Name:</span> <span id="profileName">-</span></div>
+                        <div><span class="k">Company:</span> <span id="profileCompanyName">-</span></div>
                         <div><span class="k">Email:</span> <span id="profileEmail">-</span></div>
                         <div><span class="k">Phone:</span> <span id="profilePhone">-</span></div>
                         <div><span class="k">Region:</span> <span id="profileRegion">-</span></div>
@@ -297,7 +262,7 @@
                 </div>
             </section>
 
-            <!-- VIEW: EMAIL DETAIL (placeholder) -->
+            <!-- VIEW: EMAIL DETAIL -->
             <section id="view-email-detail" class="view" style="display:none;">
                 <div class="view-card">
                     <div class="view-head">

@@ -7,7 +7,7 @@
     "reply": null,
     "group_id": null,
     "from": null,
-    "status": "draft",
+    "status": "replied",
     "risk": {
         "level": "unknown",
         "flags": [],

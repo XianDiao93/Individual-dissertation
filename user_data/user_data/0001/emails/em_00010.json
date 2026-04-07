@@ -1,0 +1,33 @@
+{
+    "source_region": "GB",
+    "language": "auto",
+    "subject": null,
+    "body": "Dear Friend,\nWe need your products urgently. Payment will be made by USDT or Bitcoin only.\nPlease send invoice immediately and use a private account for faster settlement.\nWaiting for your urgent reply.",
+    "reply": "I'm afraid we cannot proceed with your request at this time. The payment methods suggested and the urgency expressed raise significant concerns regarding the legitimacy of the inquiry.\n\nAdditionally, we need to verify your company location before considering any further steps. Please provide this information for us to assess how we can assist you properly.",
+    "group_id": null,
+    "from": null,
+    "status": "replied",
+    "risk": {
+        "level": "critical",
+        "tags": [
+            {
+                "tag": "incomplete_buyer_profile",
+                "severity": "low"
+            },
+            {
+                "tag": "possible_scam_pattern",
+                "severity": "high"
+            },
+            {
+                "tag": "suspicious_urgency",
+                "severity": "medium"
+            },
+            {
+                "tag": "unverified_counterparty",
+                "severity": "high"
+            }
+        ],
+        "summary": "Intent/conversation risk tags matched: incomplete_buyer_profile. Transaction/fraud risk tags matched: possible_scam_pattern, suspicious_urgency, unverified_counterparty. Buyer/sender country is not yet confirmed."
+    },
+    "id": "00010"
+}

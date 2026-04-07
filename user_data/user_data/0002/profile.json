@@ -4,5 +4,6 @@
     "phone": null,
     "email": null,
     "name": null,
+    "company_name": null,
     "region": "US"
 }

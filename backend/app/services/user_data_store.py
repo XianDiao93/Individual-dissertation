@@ -6,8 +6,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
-from app.services.auth_instance import auth_service
 
+from app.services.auth_instance import auth_service
 from app.config import USER_DATA_DIR, USERS_JSON_PATH
 
 JsonValue = Union[Dict[str, Any], List[Any], str, int, float, bool, None]
@@ -110,6 +110,7 @@ class UserDataStore:
                 "phone": None,
                 "email": None,
                 "name": None,
+                "company_name": None,
                 "region": None,
             }
         data = self._read_json_file(p)
@@ -185,22 +186,33 @@ class UserDataStore:
     def _write_emails_meta(self, uid: str, meta: Dict[str, Any]) -> None:
         self._write_json_atomic(self.emails_meta_path(uid), meta)
 
-    def reserve_next_email_id(self, uid: str) -> str:
+    def find_smallest_available_email_id(self, uid: str) -> str:
+        """
+        Scan the user's email files and return the smallest available 5-digit ID.
+
+        Examples:
+        existing = 00001, 00002, 00004 -> returns 00003
+        existing = none -> returns 00001
+        """
         self.ensure_user_skeleton(uid)
 
-        meta = self._read_emails_meta(uid)
-        next_id = meta.get("next_id", None)
+        used_ids = set()
+        for sid in self.list_email_ids(uid):
+            if sid.isdigit():
+                used_ids.add(int(sid))
 
-        if not isinstance(next_id, int) or next_id <= 0:
-            ids = self.list_email_ids(uid)
-            max_id = max([int(x) for x in ids], default=0)
-            next_id = max_id + 1
+        candidate = 1
+        while candidate in used_ids:
+            candidate += 1
 
-        current = next_id
-        meta["next_id"] = next_id + 1
-        self._write_emails_meta(uid, meta)
+        return f"{candidate:05d}"
 
-        return f"{current:05d}"
+    def reserve_next_email_id(self, uid: str) -> str:
+        """
+        Kept for backward compatibility, but now delegates to the smallest
+        available ID policy instead of relying on emails_meta.json.
+        """
+        return self.find_smallest_available_email_id(uid)
 
     # -------------------------
     # email write / create / delete
@@ -216,13 +228,28 @@ class UserDataStore:
 
     def create_email(self, uid: str, email_obj: Dict[str, Any]) -> Dict[str, Any]:
         self.ensure_user_skeleton(uid)
-        new_id = self.reserve_next_email_id(uid)
 
         obj = dict(email_obj)
-        obj["id"] = new_id
 
-        self.write_email(uid, obj)
-        return obj
+        # If caller already provides a valid ID, respect it but prevent overwrite.
+        existing_id = str(obj.get("id") or "")
+        if re.fullmatch(r"\d{5}", existing_id):
+            target_path = self.email_path(uid, existing_id)
+            if target_path.exists():
+                raise UserDataStoreError(f"email id already exists: {existing_id}")
+            self.write_email(uid, obj)
+            return obj
+
+        # Otherwise allocate the smallest currently available ID.
+        candidate = 1
+        while True:
+            new_id = f"{candidate:05d}"
+            target_path = self.email_path(uid, new_id)
+            if not target_path.exists():
+                obj["id"] = new_id
+                self.write_email(uid, obj)
+                return obj
+            candidate += 1
 
     def delete_email(self, uid: str, email_id: str) -> None:
         if not re.fullmatch(r"\d{5}", str(email_id)):

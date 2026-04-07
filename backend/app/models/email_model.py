@@ -4,28 +4,30 @@ from __future__ import annotations
 
 from typing import List, Optional, Literal
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional, Literal
-from pydantic import BaseModel, Field, ConfigDict
 
 RiskLevel = Literal["unknown", "low", "medium", "high", "critical"]
 RiskSeverity = Literal["unknown", "low", "medium", "high", "critical"]
 EmailStatus = Literal["draft", "enriched", "replied"]
 
+
 class EmailRiskTag(BaseModel):
     model_config = ConfigDict(extra="ignore")
+
     tag: str
     severity: RiskSeverity = "unknown"
 
 
 class EmailRisk(BaseModel):
     model_config = ConfigDict(extra="ignore")
+
     level: RiskLevel = "unknown"
     tags: List[EmailRiskTag] = Field(default_factory=list)
     summary: Optional[str] = None
 
+
 class EmailItem(BaseModel):
     """
-    Matches your email JSON file schema (em_00001.json)
+    Full email detail model.
     """
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
@@ -54,11 +56,14 @@ class EmailSummary(BaseModel):
     from_: Optional[str] = Field(default=None, alias="from")
     status: EmailStatus = "draft"
     group_id: Optional[str] = None
+
     risk_level: RiskLevel = "unknown"
+    risk_tags: List[EmailRiskTag] = Field(default_factory=list)
 
 
 class EmailListResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
+
     ok: bool
     emails: List[EmailSummary] = Field(default_factory=list)
     error: Optional[str] = None
@@ -66,6 +71,7 @@ class EmailListResponse(BaseModel):
 
 class EmailDetailResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
+
     ok: bool
     email: Optional[EmailItem] = None
     error: Optional[str] = None
@@ -91,11 +97,14 @@ class EmailUpdateRequest(BaseModel):
 
 class EmailUpdateResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
+
     ok: bool
     email: Optional[EmailItem] = None
     error: Optional[str] = None
 
+
 class EmailDeleteResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
+
     ok: bool
     error: Optional[str] = None

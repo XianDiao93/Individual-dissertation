@@ -27,6 +27,7 @@ class ProfileService:
         profile.setdefault("phone", None)
         profile.setdefault("email", None)
         profile.setdefault("name", None)
+        profile.setdefault("company_name", None)
         profile.setdefault("region", None)
 
         return profile
@@ -38,6 +39,7 @@ class ProfileService:
         phone: Optional[str] = None,
         email: Optional[str] = None,
         name: Optional[str] = None,
+        company_name: Optional[str] = None,
         region: Optional[str] = None,
         fallback_user_name: Optional[str] = None,
         fallback_role: Optional[str] = None,
@@ -54,6 +56,8 @@ class ProfileService:
             profile["email"] = email
         if name is not None:
             profile["name"] = name
+        if company_name is not None:
+            profile["company_name"] = company_name
         if region is not None:
             profile["region"] = region
 

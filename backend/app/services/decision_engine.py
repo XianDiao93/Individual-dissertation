@@ -1,5 +1,3 @@
-# backend/app/services/decision_engine.py
-
 from __future__ import annotations
 
 from typing import Dict, List
@@ -21,7 +19,6 @@ SEVERITY_PRIORITY = {
     "unknown": 0,
 }
 
-# 每个 tag 的累计权重
 SEVERITY_SCORE = {
     "critical": 10,
     "high": 6,
@@ -29,6 +26,8 @@ SEVERITY_SCORE = {
     "low": 1,
     "unknown": 0,
 }
+
+NO_RISK_TAG = "no_risk_recognised"
 
 
 def _normalize_severity(severity: str | None) -> str:
@@ -48,7 +47,7 @@ def _score_from_severities(severities: List[str]) -> int:
 
 def _highest_severity(severities: List[str]) -> str:
     if not severities:
-        return "unknown"
+        return "low"
 
     best = "unknown"
     best_score = -1
@@ -65,11 +64,11 @@ def _highest_severity(severities: List[str]) -> str:
 
 def _level_from_total_score(total_score: int) -> str:
     """
-    把累计分数映射为综合等级。
-    这些阈值可以后续根据测试数据继续调。
+    综合分数映射规则：
+    0分也视为 low，而不是 unknown
+    1-2 个 low tag 仍然是 low
+    多个 low tag（例如 5~6 个）会升到 medium
     """
-    if total_score <= 0:
-        return "unknown"
     if total_score <= 2:
         return "low"
     if total_score <= 7:
@@ -82,24 +81,23 @@ def _level_from_total_score(total_score: int) -> str:
 def _final_level_from_severities(severities: List[str]) -> str:
     """
     综合规则：
-    1. critical 直接 critical
-    2. 用加权总分计算基础等级
-    3. 若存在 high，则最终等级至少为 high
+    1. 没有任何 severity 时，默认 low
+    2. critical 直接 critical
+    3. high 至少保证最终为 high
+    4. 其余根据累计分数判断
     """
     if not severities:
-        return "unknown"
+        return "low"
 
     normalized = [_normalize_severity(s) for s in severities]
     highest = _highest_severity(normalized)
 
-    # 硬触发：只要有 critical，直接 critical
     if highest == "critical":
         return "critical"
 
     total_score = _score_from_severities(normalized)
     level = _level_from_total_score(total_score)
 
-    # 保底规则：只要出现 high，最终等级至少为 high
     if highest == "high" and SEVERITY_PRIORITY[level] < SEVERITY_PRIORITY["high"]:
         return "high"
 
@@ -108,27 +106,29 @@ def _final_level_from_severities(severities: List[str]) -> str:
 
 def decide_from_tags(tags: List[str], tag_severity_map: Dict[str, str]) -> Dict[str, str | int | List[str]]:
     """
-    Decide the final routing action from risk tags.
-
     Returns:
     {
         "decision": "CLEAR" | "WARN" | "BLOCK",
-        "level": "low" | "medium" | "high" | "critical" | "unknown",
+        "level": "low" | "medium" | "high" | "critical",
         "total_score": int,
-        "severities": [...]
+        "severities": [...],
+        "effective_tags": [...]
     }
     """
-    if not tags:
+    clean_tags = [str(tag).strip() for tag in tags if str(tag).strip()]
+
+    if not clean_tags:
         return {
             "decision": "CLEAR",
-            "level": "unknown",
+            "level": "low",
             "total_score": 0,
             "severities": [],
+            "effective_tags": [NO_RISK_TAG],
         }
 
     severities = [
         _normalize_severity(tag_severity_map.get(tag, "unknown"))
-        for tag in tags
+        for tag in clean_tags
     ]
 
     total_score = _score_from_severities(severities)
@@ -140,4 +140,5 @@ def decide_from_tags(tags: List[str], tag_severity_map: Dict[str, str]) -> Dict[
         "level": level,
         "total_score": total_score,
         "severities": severities,
+        "effective_tags": clean_tags,
     }

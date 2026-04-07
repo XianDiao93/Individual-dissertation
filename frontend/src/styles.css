@@ -51,12 +51,20 @@ body {
 /* Sidebar */
 .sidebar{
     width: 280px;
+    height: 100vh;
     border-right: 1px solid var(--border);
     background: #fff;
     display:flex;
     flex-direction:column;
     padding: 14px;
     gap: 14px;
+    overflow: hidden;
+}
+
+.sidebar-section.scroll-section{
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .sidebar-top{
@@ -129,6 +137,14 @@ body {
     display:flex;
     flex-direction:column;
     gap: 6px;
+}
+
+#emailsList{
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
 }
 
 .sidebar-item{

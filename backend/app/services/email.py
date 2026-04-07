@@ -45,7 +45,7 @@ class EmailService:
 
             risk = e.get("risk") or {}
             risk_level = risk.get("level") or "unknown"
-            risk_tags = risk.get("tags") or []
+            risk_tags = risk.get("tags") or risk.get("flags") or []
 
             out.append(
                 {
@@ -78,7 +78,8 @@ class EmailService:
         if not isinstance(risk, dict):
             risk = {}
         risk.setdefault("level", "unknown")
-        risk.setdefault("tags", [])
+        if not isinstance(risk.get("tags"), list):
+            risk["tags"] = risk.get("tags") or risk.get("flags") or []
         risk.setdefault("summary", None)
         e["risk"] = risk
 

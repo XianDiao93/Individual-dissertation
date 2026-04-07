@@ -1,0 +1,29 @@
+{
+    "source_region": "GB",
+    "language": "auto",
+    "subject": null,
+    "body": "Hello,\nSend 5,000 units immediately. No need for details. We will confirm later.\nThis must be shipped within 24 hours.\nRegards,\nTom",
+    "reply": "Hello Tom,\n\nThank you for your inquiry.\n\nTo proceed with the shipment of 5,000 units, could you please provide details regarding the product requested, as well as your location? This information is necessary for us to ensure timely processing and compliance.\nBest Regards.\nXian Diao\nDIOX Ltd.",
+    "group_id": null,
+    "from": null,
+    "status": "replied",
+    "risk": {
+        "level": "high",
+        "tags": [
+            {
+                "tag": "incomplete_buyer_profile",
+                "severity": "low"
+            },
+            {
+                "tag": "suspicious_urgency",
+                "severity": "medium"
+            },
+            {
+                "tag": "unverified_counterparty",
+                "severity": "high"
+            }
+        ],
+        "summary": "Intent/conversation risk tags matched: incomplete_buyer_profile. Transaction/fraud risk tags matched: suspicious_urgency, unverified_counterparty. Buyer/sender country is not yet confirmed."
+    },
+    "id": "00020"
+}

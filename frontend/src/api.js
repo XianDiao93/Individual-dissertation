@@ -56,22 +56,12 @@ async function callApi(endpoint, options = {}) {
  * Call communication endpoint.
  * Backend route: POST /api/chat
  */
-export function callCommunicationAPI({
-    message,
-    language,
-    region,
-    tone,
-    replyForm,
-}) {
+export function callCommunicationAPI({ message }) {
     return callApi("/api/chat", {
         method: "POST",
         token: getToken(),
         payload: {
             message,
-            language,
-            region,
-            tone,
-            reply_form: replyForm,
         },
     });
 }

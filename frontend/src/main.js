@@ -58,6 +58,7 @@ const profileName = document.getElementById("profileName");
 const profileEmail = document.getElementById("profileEmail");
 const profilePhone = document.getElementById("profilePhone");
 const profileRegion = document.getElementById("profileRegion");
+const profileCompanyName = document.getElementById("profileCompanyName");
 
 /* =========================
    Helpers
@@ -104,6 +105,29 @@ function getSeverityClass(severity) {
     return "risk-unknown";
 }
 
+function normalizeRiskTags(source) {
+    if (!source || typeof source !== "object") return [];
+
+    if (Array.isArray(source.risk_tags)) {
+        return source.risk_tags;
+    }
+
+    const risk = source.risk;
+    if (!risk || typeof risk !== "object") {
+        return [];
+    }
+
+    if (Array.isArray(risk.tags)) {
+        return risk.tags;
+    }
+
+    if (Array.isArray(risk.flags)) {
+        return risk.flags;
+    }
+
+    return [];
+}
+
 function renderRiskTags(tags) {
     if (!Array.isArray(tags) || !tags.length) {
         return `<span class="risk-tag risk-unknown">unknown</span>`;
@@ -118,10 +142,116 @@ function renderRiskTags(tags) {
         .join(" ");
 }
 
+function resetCommunicationInputs() {
+    const commMessage = document.getElementById("commMessage");
+    if (commMessage) commMessage.value = "";
+}
+
+function resetDocumentInputs() {
+    const ids = [
+        "docSeller",
+        "docBuyer",
+        "docProduct",
+        "docQuantity",
+        "docUnitPrice",
+        "docIncoterm",
+        "docPaymentTerm",
+        "docExtra",
+    ];
+
+    ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+    });
+
+    const docType = document.getElementById("docType");
+    const docCurrency = document.getElementById("docCurrency");
+    const tplInput = document.getElementById("docTemplate");
+    const imgInput = document.getElementById("docImage");
+
+    if (docType) docType.value = "sales_contract";
+    if (docCurrency) docCurrency.value = "USD";
+    if (tplInput) tplInput.value = "";
+    if (imgInput) imgInput.value = "";
+
+    if (docTypeSelect) {
+        const t = docTypeSelect.value;
+        if (t === "sales_contract" || t === "quotation") {
+            docTemplateGroup.style.display = "block";
+            docImageGroup.style.display = "none";
+        } else if (t === "product_manual") {
+            docTemplateGroup.style.display = "none";
+            docImageGroup.style.display = "block";
+        } else {
+            docTemplateGroup.style.display = "block";
+            docImageGroup.style.display = "none";
+        }
+    }
+}
+
+function resetResponsePanel() {
+    responseBody.textContent = "The AI response will appear here.";
+}
+
+function resetEmailDetailPanel() {
+    selectedEmailId = null;
+    emailDetailTitle.textContent = "Email";
+    emailDetailFrom.textContent = "-";
+    emailDetailCustomerType.textContent = "-";
+    emailDetailFiles.textContent = "-";
+    emailDetailRisks.innerHTML = "-";
+    emailDetailBodyBox.textContent = "(empty)";
+    emailDetailReplyBox.textContent = "No reply";
+}
+
+function resetProfilePanel() {
+    profileStatus.textContent = "Loading...";
+    profileUid.textContent = "-";
+    profileUserName.textContent = "-";
+    profileRole.textContent = "-";
+    profileName.textContent = "-";
+    profileEmail.textContent = "-";
+    profilePhone.textContent = "-";
+    profileRegion.textContent = "-";
+    profileCompanyName.textContent = "-";
+}
+
+function resetEmailsSidebar() {
+    unarchivedCountEl.textContent = "0";
+    emailsListEl.innerHTML = "";
+    emailsEmptyEl.style.display = "block";
+}
+
+function resetWorkspaceState() {
+    currentMode = "communication";
+    showView("home");
+
+    tabs.forEach((t) => t.classList.toggle("active", t.dataset.mode === "communication"));
+
+    const commMode = document.getElementById("mode-communication");
+    const docMode = document.getElementById("mode-document");
+    if (commMode) commMode.style.display = "block";
+    if (docMode) docMode.style.display = "none";
+
+    resetCommunicationInputs();
+    resetDocumentInputs();
+    resetResponsePanel();
+    resetEmailDetailPanel();
+    resetProfilePanel();
+    resetEmailsSidebar();
+
+    loginError.textContent = "";
+
+    const loginUserName = document.getElementById("loginUserName");
+    const loginPassword = document.getElementById("loginPassword");
+    if (loginUserName) loginUserName.value = "";
+    if (loginPassword) loginPassword.value = "";
+}
+
 /* =========================
    Simple view routing
 ========================= */
-let currentView = "home"; // "home" | "profile" | "emailDetail"
+let currentView = "home";
 let selectedEmailId = null;
 
 function showView(viewName) {
@@ -170,7 +300,7 @@ tabs.forEach((tab) => {
         document.getElementById("mode-document").style.display =
             mode === "document" ? "block" : "none";
 
-        responseBody.textContent = "The AI response will appear here.";
+        resetResponsePanel();
     });
 });
 
@@ -184,10 +314,6 @@ async function callBackend() {
     try {
         if (currentMode === "communication") {
             const message = document.getElementById("commMessage").value.trim();
-            const language = document.getElementById("commLanguage").value;
-            const region = document.getElementById("commRegion").value;
-            const tone = document.getElementById("commTone").value;
-            const replyForm = document.getElementById("commReplyForm").value;
 
             if (!message) {
                 responseBody.textContent = "Please enter a message before sending.";
@@ -196,10 +322,6 @@ async function callBackend() {
 
             const data = await callCommunicationAPI({
                 message,
-                language,
-                region,
-                tone,
-                replyForm,
             });
 
             responseBody.textContent = data.reply || JSON.stringify(data, null, 2);
@@ -295,28 +417,11 @@ btnSubmit.addEventListener("click", callBackend);
 ========================= */
 btnClear.addEventListener("click", () => {
     if (currentMode === "communication") {
-        document.getElementById("commMessage").value = "";
+        resetCommunicationInputs();
     }
 
     if (currentMode === "document") {
-        [
-            "docSeller",
-            "docBuyer",
-            "docProduct",
-            "docQuantity",
-            "docUnitPrice",
-            "docIncoterm",
-            "docPaymentTerm",
-            "docExtra",
-        ].forEach((id) => {
-            document.getElementById(id).value = "";
-        });
-
-        const tplInput = document.getElementById("docTemplate");
-        if (tplInput) tplInput.value = "";
-
-        const imgInput = document.getElementById("docImage");
-        if (imgInput) imgInput.value = "";
+        resetDocumentInputs();
     }
 });
 
@@ -371,20 +476,28 @@ function logout() {
     }
 
     localStorage.removeItem("auth_token");
+    resetWorkspaceState();
 
     workspaceShell.style.display = "none";
     loginScreen.style.display = "flex";
+
+    location.reload();
 }
 
 logoutBtn.addEventListener("click", logout);
 
 window.addEventListener("DOMContentLoaded", async () => {
+    resetWorkspaceState();
+
     const token = localStorage.getItem("auth_token");
     if (token) {
         loginScreen.style.display = "none";
         workspaceShell.style.display = "flex";
         showView("home");
         await renderEmailsList();
+    } else {
+        workspaceShell.style.display = "none";
+        loginScreen.style.display = "flex";
     }
 });
 
@@ -404,6 +517,7 @@ async function loadProfile() {
         profileEmail.textContent = "-";
         profilePhone.textContent = "-";
         profileRegion.textContent = "-";
+        profileCompanyName.textContent = "-";
         return;
     }
 
@@ -425,6 +539,7 @@ async function loadProfile() {
         profileEmail.textContent = p.email ?? "-";
         profilePhone.textContent = p.phone ?? "-";
         profileRegion.textContent = p.region ?? "-";
+        profileCompanyName.textContent = p.company_name ?? "-";
 
         profileStatus.textContent = "Loaded.";
     } catch (err) {
@@ -488,11 +603,12 @@ async function renderEmailsList() {
             meta.className = "m";
 
             const fromText = e.from || "-";
-            const riskTags = Array.isArray(e.risk_tags) ? e.risk_tags : [];
-            const tagsHtml = renderRiskTags(riskTags);
+            const riskLevel = e.risk_level || e?.risk?.level || "unknown";
+
+            const riskLevelHtml = `<span class="risk-tag ${getSeverityClass(riskLevel)}">${escapeHtml(riskLevel)}</span>`;
 
             meta.innerHTML = `
-                ${escapeHtml(fromText)} · ${tagsHtml} · ${escapeHtml(e.status || "draft")}
+                ${escapeHtml(fromText)} · ${riskLevelHtml} · ${escapeHtml(e.status || "draft")}
             `;
 
             item.appendChild(title);
@@ -554,10 +670,8 @@ async function openEmailDetail(emailId) {
 
         const risk = e.risk || {};
         const level = risk.level || "unknown";
-        const tags = Array.isArray(risk.tags) ? risk.tags : [];
-
+        const tags = normalizeRiskTags(e);
         const tagsHtml = renderRiskTags(tags);
-
 
         emailDetailRisks.innerHTML = `
             <span class="risk-tag ${getSeverityClass(level)}">level:${escapeHtml(level)}</span>
@@ -646,7 +760,7 @@ emailDetailDeleteBtn.addEventListener("click", async () => {
         }
 
         showView("home");
-        responseBody.textContent = "";
+        resetResponsePanel();
 
         await renderEmailsList();
     } catch (err) {

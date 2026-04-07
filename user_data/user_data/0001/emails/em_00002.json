@@ -1,0 +1,25 @@
+{
+    "source_region": "GB",
+    "language": "auto",
+    "subject": null,
+    "body": "Hello, we are interested in your light panels, are you available offline?",
+    "reply": "Dear Sir/Madam,\n\nThank you for your interest in our light panels. We appreciate your inquiry and would be happy to discuss this further.\n\nBefore proceeding, could you kindly confirm your country or company location? This information will help us assist you more effectively.\n\nLooking forward to your response.\n\nBest regards,\nDIOX Ltd.",
+    "group_id": null,
+    "from": null,
+    "status": "replied",
+    "risk": {
+        "level": "high",
+        "tags": [
+            {
+                "tag": "incomplete_buyer_profile",
+                "severity": "low"
+            },
+            {
+                "tag": "unverified_counterparty",
+                "severity": "high"
+            }
+        ],
+        "summary": "Intent/conversation risk tags matched: incomplete_buyer_profile. Transaction/fraud risk tags matched: unverified_counterparty. Buyer/sender country is not yet confirmed."
+    },
+    "id": "00002"
+}

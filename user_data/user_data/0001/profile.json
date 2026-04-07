@@ -1,8 +1,9 @@
 {
     "uid": "0001",
     "user_name": "Admin",
-    "phone": null,
-    "email": null,
-    "name": null,
+    "phone": "+44 1234567890",
+    "email": "admin@example.com",
+    "name": "Xian Diao",
+    "company_name": "DIOX Ltd.",
     "region": "GB"
 }

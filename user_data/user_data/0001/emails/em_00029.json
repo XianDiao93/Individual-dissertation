@@ -3,7 +3,7 @@
     "language": "auto",
     "subject": null,
     "body": "Hello, my name is paul and I have a company called lightbulbstogo. I'm interestedin your LED lightbulb products as I think it would be a good fit for my customers here in france. Please could we arrange to meet to discuss the potential export/import process and to discuss the possibility of a bulk discount?\n\nKind Regards,\n\nPaul Tennent\nLightbulbstogo limited\nParis\nFrance",
-    "reply": "Bonjour Paul,\n\nMerci pour votre intérêt pour nos produits d'ampoules LED. Je serais ravi de discuter du processus d'exportation et des options de remise sur les commandes en gros. Pourriez-vous me faire savoir vos disponibilités pour une réunion dans les prochains jours ?\n\nDans l'attente de votre réponse.",
+    "reply": "Dear Paul,\n\nThank you for your message. We would be pleased to discuss your interest in our LED lightbulb products and explore the export/import process, as well as potential bulk discounts.\n\nCould you please provide your availability for a meeting? We look forward to hearing from you soon.\nBest Regards.\nXian Diao\nDIOX Ltd.",
     "group_id": null,
     "from": null,
     "status": "replied",
@@ -17,5 +17,5 @@
         ],
         "summary": "Intent/conversation risk tags matched: incomplete_buyer_profile."
     },
-    "id": "00004"
+    "id": "00029"
 }

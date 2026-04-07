@@ -12,6 +12,7 @@ def generate_reply(
     reply_form: str = "email",
     user_name: Optional[str] = None,
     name: Optional[str] = None,
+    company_name: Optional[str] = None,
     email: Optional[str] = None,
     phone: Optional[str] = None,
     normalized_facts: Optional[dict[str, Any]] = None,
@@ -32,22 +33,36 @@ def generate_reply(
         Writing style ("formal", "neutral", "friendly")
     reply_form:
         Reply format ("email" or "chat")
-    user_name / name / email / phone:
+    user_name / name / company_name / email / phone:
         Optional sender profile info
     normalized_facts:
         Structured facts extracted from the incoming message.
+        May include:
+        - origin_country_name
+        - origin_country_code
+        - destination_country_name
+        - destination_country_code
+        - ambiguity_flags: list[str]
     risk_result:
-        Risk analysis result produced by risk.py, e.g.
-        {
-            "decision": "WARN",
-            "risk_tags": [...],
-            "risk": {
-                "level": "medium",
-                "flags": [...],
-                "summary": "..."
-            }
-        }
+        Risk analysis result produced by risk.py
     """
+    safe_facts = dict(normalized_facts or {})
+    ambiguity_flags = safe_facts.get("ambiguity_flags")
+
+    if not isinstance(ambiguity_flags, list):
+        safe_facts["ambiguity_flags"] = []
+
+    safe_risk = risk_result or {
+        "decision": "CLEAR",
+        "risk_tags": [],
+        "risk": {
+            "level": "unknown",
+            "flags": [],
+            "summary": None,
+        },
+        "by_category": {},
+    }
+
     return generate_business_reply(
         message=message,
         language=language,
@@ -56,16 +71,9 @@ def generate_reply(
         reply_form=reply_form,
         user_name=user_name,
         name=name,
+        company_name=company_name,
         email=email,
         phone=phone,
-        normalized_facts=normalized_facts or {},
-        risk_result=risk_result or {
-            "decision": "CLEAR",
-            "risk_tags": [],
-            "risk": {
-                "level": "unknown",
-                "flags": [],
-                "summary": None,
-            },
-        },
+        normalized_facts=safe_facts,
+        risk_result=safe_risk,
     )

@@ -61,12 +61,18 @@ async def chat_endpoint(
                 fallback_role=user.role,
             )
 
-    region = profile.get("region") or req.region or "GB"
+    # 这里只作为 extraction 的 hint / fallback，不作为最终 source_region
+    profile_region = profile.get("region") or "GB"
 
     facts = extract_trade_facts(
         message=req.message,
-        user_region=region,
-        preferred_language=req.language,
+        user_region=profile_region,
+        preferred_language=None,
+    )
+
+    detected_source_region = (
+        facts.get("origin_country_code")
+        or profile_region
     )
 
     if analyze_risks is not None:
@@ -80,30 +86,33 @@ async def chat_endpoint(
     else:
         risk_result = _default_risk_result()
 
+
     reply = generate_reply(
         message=req.message,
-        language=req.language,
-        region=region,
-        tone=req.tone,
-        reply_form=req.reply_form,
+        language="auto",
+        region=detected_source_region,
+        tone="formal",
+        reply_form="email",
         user_name=profile.get("user_name"),
         name=profile.get("name"),
+        company_name=profile.get("company_name"),
         email=profile.get("email"),
         phone=profile.get("phone"),
         normalized_facts=facts,
         risk_result=risk_result,
     )
-    
+
+
     if user:
         email_obj = {
-            "source_region": region,
-            "language": req.language,
+            "source_region": detected_source_region,
+            "language": facts.get("language") or "auto",
             "subject": None,
             "body": req.message,
             "reply": reply,
             "group_id": None,
-            "from": profile.get("email"),
-            "status": "draft",
+            "from": None,
+            "status": "replied",
             "risk": {
                 "level": risk_result.get("risk", {}).get("level", "unknown"),
                 "tags": risk_result.get("risk", {}).get("tags", []),

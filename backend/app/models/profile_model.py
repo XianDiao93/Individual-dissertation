@@ -10,6 +10,7 @@ class UserProfile(BaseModel):
     phone: Optional[str] = None
     email: Optional[str] = None
     name: Optional[str] = None
+    company_name: Optional[str] = None
     region: Optional[str] = None
 
 
@@ -23,4 +24,5 @@ class ProfileUpdateRequest(BaseModel):
     phone: Optional[str] = None
     email: Optional[str] = None
     name: Optional[str] = None
+    company_name: Optional[str] = None
     region: Optional[str] = None
