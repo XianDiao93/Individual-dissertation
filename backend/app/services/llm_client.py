@@ -206,6 +206,17 @@ def _resolve_output_language(
     return "en"
 
 
+def _pick_sender_name(name: Optional[str], user_name: Optional[str]) -> Optional[str]:
+    """
+    Prefer the real profile/display name first, then fall back to the account user name.
+    """
+    for candidate in (name, user_name):
+        norm = _normalize_optional_text(candidate)
+        if norm:
+            return norm
+    return None
+
+
 def generate_business_reply(
     message: str,
     language: str = "auto",
@@ -336,7 +347,16 @@ def generate_business_reply(
     if not reply_text:
         reply_text = str(response)
 
-    return _cleanup_generated_reply(reply_text, reply_form=reply_form_norm)
+    sender_name = _pick_sender_name(safe_name, safe_user_name)
+
+    return _cleanup_generated_reply(
+        reply_text,
+        reply_form=reply_form_norm,
+        sender_name=sender_name,
+        company_name=safe_company_name,
+        email=safe_email,
+        phone=safe_phone,
+    )
 
 
 def generate_document_text(
@@ -411,9 +431,172 @@ def generate_document_text(
     return doc_text
 
 
-def _cleanup_generated_reply(text: str, reply_form: str = "email") -> str:
+def _replace_known_placeholders(
+    text: str,
+    *,
+    sender_name: Optional[str],
+    company_name: Optional[str],
+    email: Optional[str],
+    phone: Optional[str],
+) -> str:
+    """
+    Replace common placeholder markers with real profile values when available.
+    If no real value exists, the placeholder is left for later line-level cleanup.
+    """
+    placeholder_map = {
+        # name
+        "[Your Name]": sender_name,
+        "[Your Full Name]": sender_name,
+        "[Ihr Name]": sender_name,
+        "[Ihr vollständiger Name]": sender_name,
+        "[Votre nom]": sender_name,
+        "[Nom]": sender_name,
+        "[Su nombre]": sender_name,
+        "[Nombre]": sender_name,
+        "[您的姓名]": sender_name,
+        "[会社名担当者名]": sender_name,
+        # company
+        "[Company Name]": company_name,
+        "[Your Company Name]": company_name,
+        "[Your Company]": company_name,
+        "[Ihr Firmenname]": company_name,
+        "[Firmenname]": company_name,
+        "[Nom de l’entreprise]": company_name,
+        "[Nombre de la empresa]": company_name,
+        "[公司名称]": company_name,
+        "[会社名]": company_name,
+        # email
+        "[Your Email]": email,
+        "[Your Email Address]": email,
+        "[Ihre E-Mail]": email,
+        "[Ihre E-Mail-Adresse]": email,
+        "[Votre e-mail]": email,
+        "[Su correo electrónico]": email,
+        "[电子邮件]": email,
+        "[メールアドレス]": email,
+        # phone
+        "[Your Phone]": phone,
+        "[Your Phone Number]": phone,
+        "[Ihre Telefonnummer]": phone,
+        "[Votre numéro de téléphone]": phone,
+        "[Su número de teléfono]": phone,
+        "[电话号码]": phone,
+        "[電話番号]": phone,
+    }
+
+    for token, value in placeholder_map.items():
+        if value:
+            text = text.replace(token, value)
+
+    return text
+
+
+def _remove_placeholder_lines(text: str) -> str:
+    """
+    Remove any remaining lines that still contain obvious template placeholders.
+    This is intentionally broad, because a visible placeholder is always worse
+    than omitting the missing line.
+    """
+    generic_placeholder_patterns = [
+        r"\[[^\]]*(?:your|company|contact|recipient|customer|client|name|email|phone|address|position)[^\]]*\]",
+        r"\[[^\]]*(?:ihr|ihre|firmenname|name|e-mail|telefon)[^\]]*\]",
+        r"\[[^\]]*(?:nom|entreprise|e-mail|téléphone)[^\]]*\]",
+        r"\[[^\]]*(?:nombre|empresa|correo|teléfono)[^\]]*\]",
+        r"\[[^\]]*(?:姓名|公司|名称|邮件|电话)[^\]]*\]",
+        r"\[[^\]]*(?:会社|氏名|名前|メール|電話)[^\]]*\]",
+    ]
+
+    lines = text.splitlines()
+    cleaned_lines: list[str] = []
+
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            cleaned_lines.append(line)
+            continue
+
+        if any(re.search(pattern, stripped, flags=re.IGNORECASE) for pattern in generic_placeholder_patterns):
+            continue
+
+        cleaned_lines.append(line)
+
+    return "\n".join(cleaned_lines)
+
+
+def _remove_orphan_signature_lines(
+    text: str,
+    *,
+    sender_name: Optional[str],
+    company_name: Optional[str],
+    email: Optional[str],
+    phone: Optional[str],
+) -> str:
+    """
+    If the model produced a signature block with missing placeholder lines removed,
+    keep only real signature content. Also remove orphan punctuation-only lines.
+    """
+    valid_signature_values = {
+        v.strip()
+        for v in [sender_name, company_name, email, phone]
+        if isinstance(v, str) and v.strip()
+    }
+
+    lines = text.splitlines()
+    cleaned_lines: list[str] = []
+
+    for line in lines:
+        stripped = line.strip()
+
+        if not stripped:
+            cleaned_lines.append(line)
+            continue
+
+        # Remove lines that became empty-ish after placeholder cleanup.
+        if stripped in {"-", "--", "—", ".", ",", ":", ";"}:
+            continue
+
+        # Keep all normal content lines. This function mainly prevents obvious junk.
+        cleaned_lines.append(line)
+
+    text = "\n".join(cleaned_lines)
+
+    # If there is no sender name, do not allow generic "Name" style residue lines.
+    if not sender_name:
+        text = re.sub(r"(?im)^\s*(name|full name|ihr name|nom|nombre|姓名|氏名)\s*$\n?", "", text)
+
+    # If there is no company, remove bare company label residue.
+    if not company_name:
+        text = re.sub(r"(?im)^\s*(company name|firmenname|nom de l’entreprise|nombre de la empresa|公司名称|会社名)\s*$\n?", "", text)
+
+    # If there is no email, remove bare email label residue.
+    if not email:
+        text = re.sub(r"(?im)^\s*(email|e-mail|email address|e-mail-adresse|correo electrónico|电子邮件|メールアドレス)\s*$\n?", "", text)
+
+    # If there is no phone, remove bare phone label residue.
+    if not phone:
+        text = re.sub(r"(?im)^\s*(phone|phone number|telefon|telefonnummer|número de teléfono|电话号码|電話番号)\s*$\n?", "", text)
+
+    return text
+
+
+def _cleanup_generated_reply(
+    text: str,
+    reply_form: str = "email",
+    sender_name: Optional[str] = None,
+    company_name: Optional[str] = None,
+    email: Optional[str] = None,
+    phone: Optional[str] = None,
+) -> str:
     if not text:
         return text
+
+    text = _replace_known_placeholders(
+        text,
+        sender_name=sender_name,
+        company_name=company_name,
+        email=email,
+        phone=phone,
+    )
 
     banned_markers = [
         "[Your Name]",
@@ -436,6 +619,30 @@ def _cleanup_generated_reply(text: str, reply_form: str = "email") -> str:
         "[Customer Name]",
         "[Client Name]",
         "[Dear recipient]",
+        "[Ihr Name]",
+        "[Ihr vollständiger Name]",
+        "[Ihr Firmenname]",
+        "[Ihre E-Mail]",
+        "[Ihre E-Mail-Adresse]",
+        "[Ihre Telefonnummer]",
+        "[Votre nom]",
+        "[Nom]",
+        "[Nom de l’entreprise]",
+        "[Votre e-mail]",
+        "[Votre numéro de téléphone]",
+        "[Su nombre]",
+        "[Nombre]",
+        "[Nombre de la empresa]",
+        "[Su correo electrónico]",
+        "[Su número de teléfono]",
+        "[您的姓名]",
+        "[公司名称]",
+        "[电子邮件]",
+        "[电话号码]",
+        "[会社名]",
+        "[氏名]",
+        "[メールアドレス]",
+        "[電話番号]",
     ]
 
     for marker in banned_markers:
@@ -447,6 +654,8 @@ def _cleanup_generated_reply(text: str, reply_form: str = "email") -> str:
         text,
         flags=re.IGNORECASE,
     )
+
+    text = _remove_placeholder_lines(text)
 
     if reply_form == "email":
         email_header_patterns = [
@@ -462,6 +671,14 @@ def _cleanup_generated_reply(text: str, reply_form: str = "email") -> str:
         ]
         for pattern in email_header_patterns:
             text = re.sub(pattern, "", text)
+
+    text = _remove_orphan_signature_lines(
+        text,
+        sender_name=sender_name,
+        company_name=company_name,
+        email=email,
+        phone=phone,
+    )
 
     text = re.sub(r"[ \t]+\n", "\n", text)
     text = re.sub(r"\n{3,}", "\n\n", text)

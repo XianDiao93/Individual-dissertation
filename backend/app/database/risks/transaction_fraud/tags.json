@@ -1,12 +1,12 @@
 [
     {
         "tag": "suspicious_urgency",
-        "severity": "medium",
+        "severity": "high",
         "description": "The message uses unusual urgency or pressure."
     },
     {
         "tag": "unverified_counterparty",
-        "severity": "high",
+        "severity": "medium",
         "description": "The counterparty identity cannot be confidently verified."
     },
     {

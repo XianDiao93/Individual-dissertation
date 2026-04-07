@@ -1,10 +1,42 @@
 [
-    "military_goods",
-    "dual_use_goods",
-    "hazardous_chemical",
-    "explosive_material",
-    "radioactive_material",
-    "regulated_medical_device",
-    "regulated_pharmaceutical",
-    "counterfeit_sensitive_product"
+    {
+        "tag": "military_goods",
+        "severity": "high",
+        "description": "The product involves military goods subject to strict export controls or prohibitions."
+    },
+    {
+        "tag": "dual_use_goods",
+        "severity": "medium",
+        "description": "The product may have both civilian and military applications and could be subject to export regulations."
+    },
+    {
+        "tag": "hazardous_chemical",
+        "severity": "high",
+        "description": "The product involves hazardous chemicals that may be restricted or require special handling and compliance."
+    },
+    {
+        "tag": "explosive_material",
+        "severity": "high",
+        "description": "The product involves explosive materials subject to strict regulation and control."
+    },
+    {
+        "tag": "radioactive_material",
+        "severity": "high",
+        "description": "The product involves radioactive materials requiring strict regulatory compliance."
+    },
+    {
+        "tag": "regulated_medical_device",
+        "severity": "medium",
+        "description": "The product is a medical device subject to regulatory approval and compliance requirements."
+    },
+    {
+        "tag": "regulated_pharmaceutical",
+        "severity": "high",
+        "description": "The product involves pharmaceuticals that are highly regulated and may require licensing and certification."
+    },
+    {
+        "tag": "counterfeit_sensitive_product",
+        "severity": "medium",
+        "description": "The product is prone to counterfeiting or IP-related risks and may require verification of authenticity."
+    }
 ]
