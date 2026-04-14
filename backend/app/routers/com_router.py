@@ -61,7 +61,6 @@ async def chat_endpoint(
                 fallback_role=user.role,
             )
 
-    # 这里只作为 extraction 的 hint / fallback，不作为最终 source_region
     profile_region = profile.get("region") or "GB"
 
     facts = extract_trade_facts(

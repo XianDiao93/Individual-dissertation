@@ -199,7 +199,6 @@ def _build_summary(
 
     parts = [p for p in parts if p]
 
-    # 如果已有模块 summary，只把 extraction note 当补充，而不是主导内容
     if parts:
         if extraction_notes:
             parts.extend(extraction_notes)

@@ -6,8 +6,7 @@ from typing import Optional
 from app.models.profile_model import ProfileResponse, UserProfile, ProfileUpdateRequest
 from app.services.profile import ProfileService
 
-# IMPORTANT: share the SAME auth_service instance so tokens work
-from app.routers.auth_router import auth_service  # uses AuthService + in-memory sessions :contentReference[oaicite:3]{index=3}
+from app.routers.auth_router import auth_service
 
 
 router = APIRouter(prefix="/profile", tags=["profile"])

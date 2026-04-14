@@ -461,7 +461,7 @@ def _replace_known_placeholders(
         "[Your Company]": company_name,
         "[Ihr Firmenname]": company_name,
         "[Firmenname]": company_name,
-        "[Nom de l’entreprise]": company_name,
+        "[Nom de l'entreprise]": company_name,
         "[Nombre de la empresa]": company_name,
         "[公司名称]": company_name,
         "[会社名]": company_name,
@@ -535,11 +535,6 @@ def _remove_orphan_signature_lines(
     If the model produced a signature block with missing placeholder lines removed,
     keep only real signature content. Also remove orphan punctuation-only lines.
     """
-    valid_signature_values = {
-        v.strip()
-        for v in [sender_name, company_name, email, phone]
-        if isinstance(v, str) and v.strip()
-    }
 
     lines = text.splitlines()
     cleaned_lines: list[str] = []
@@ -566,7 +561,7 @@ def _remove_orphan_signature_lines(
 
     # If there is no company, remove bare company label residue.
     if not company_name:
-        text = re.sub(r"(?im)^\s*(company name|firmenname|nom de l’entreprise|nombre de la empresa|公司名称|会社名)\s*$\n?", "", text)
+        text = re.sub(r"(?im)^\s*(company name|firmenname|nom de l'entreprise|nombre de la empresa|公司名称|会社名)\s*$\n?", "", text)
 
     # If there is no email, remove bare email label residue.
     if not email:
@@ -627,7 +622,7 @@ def _cleanup_generated_reply(
         "[Ihre Telefonnummer]",
         "[Votre nom]",
         "[Nom]",
-        "[Nom de l’entreprise]",
+        "[Nom de l'entreprise]",
         "[Votre e-mail]",
         "[Votre numéro de téléphone]",
         "[Su nombre]",

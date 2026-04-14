@@ -51,7 +51,6 @@ async def list_emails(
         return EmailListResponse(ok=True, emails=summaries)
 
     except Exception as e:
-        # IMPORTANT: return error instead of raising -> avoids 500 black box
         return EmailListResponse(ok=False, emails=[], error=str(e))
 
 

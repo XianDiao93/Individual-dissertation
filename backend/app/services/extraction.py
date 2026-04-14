@@ -88,24 +88,7 @@ def _normalize_country_key(text: str) -> str:
 
 @lru_cache(maxsize=1)
 def _load_country_data() -> tuple[Dict[str, str], Dict[str, str]]:
-    """
-    读取 country_codes.json，返回：
-    - canonical_names: { "US": "United States", ... }
-    - alias_lookup: { normalized_alias: "US", ... }
 
-    兼容两种格式：
-    1) 新格式：
-       {
-         "canonical_names": { "US": "United States" },
-         "aliases": { "USA": "US", "America": "US" }
-       }
-
-    2) 旧格式：
-       {
-         "US": "United States",
-         "GB": "United Kingdom"
-       }
-    """
     if not COUNTRY_CODES_PATH.exists():
         return {}, {}
 
@@ -280,14 +263,7 @@ def _guess_message_type(raw_message: str, llm_value: str) -> str:
 
 
 def _detect_missing_fields(data: Dict[str, Any]) -> list[str]:
-    """
-    当前业务重点：
-    1. 买家 / 来信方所在地（origin_country_code）
-    2. 产品信息（product_requested）
 
-    destination_country_code 继续保留在结构里，但不再作为当前主缺失项。
-    recipient_address 视为可选保留检查项；如果你后面不想追问地址，也可删掉。
-    """
     important_fields = [
         "product_requested",
         "origin_country_code",
@@ -320,14 +296,7 @@ def _ensure_required_fields(
 
 
 def _normalize_country_fields(base: Dict[str, Any]) -> tuple[str, str, str, str]:
-    """
-    输入 LLM 返回的 origin/destination country name，
-    输出：
-    - origin_country_name（规范标准名，或 ambiguous）
-    - origin_country_code
-    - destination_country_name（规范标准名，或 ambiguous）
-    - destination_country_code
-    """
+
     raw_origin = _clean_str(base.get("origin_country_name"))
     raw_destination = _clean_str(base.get("destination_country_name"))
 

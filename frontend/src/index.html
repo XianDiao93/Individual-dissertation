@@ -1,303 +1,288 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>AI-Driven Trade Communication Assistant</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
+    <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>AI-Driven Trade Communication Assistant</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
 
-<body>
-    <!-- LOGIN (unchanged behavior) -->
-    <div id="loginScreen" class="login-container">
-        <div class="login-card">
-            <h2>Login</h2>
+    <body>
+        <!-- LOGIN (unchanged behavior) -->
+        <div id="loginScreen" class="login-container">
+            <div class="login-card">
+                <h2>Login</h2>
 
-            <label>User ID</label>
-            <input id="loginUserName" type="text" placeholder="Enter user name" />
+                <label>User ID</label>
+                <input id="loginUserName" type="text" placeholder="Enter user name" />
 
-            <label>Password</label>
-            <input id="loginPassword" type="password" placeholder="Enter password" />
+                <label>Password</label>
+                <input id="loginPassword" type="password" placeholder="Enter password" />
 
-            <button id="loginBtn" class="btn btn-primary" style="margin-top:12px;">
-                Submit
-            </button>
-
-            <div id="loginError" style="color:red; margin-top:8px;"></div>
-        </div>
-    </div>
-
-    <!-- NEW: WORKSPACE SHELL (shown after login) -->
-    <div id="workspaceShell" class="workspace-shell" style="display:none;">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-top">
-                <button id="navProfileBtn" class="sidebar-btn">
-                    <span class="dot"></span>
-                    <span>Profile</span>
+                <button id="loginBtn" class="btn btn-primary" style="margin-top:12px;">
+                    Submit
                 </button>
+
+                <div id="loginError" style="color:red; margin-top:8px;"></div>
             </div>
+        </div>
 
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">
-                    Groups
-                    <span class="sidebar-hint">0</span>
+        <!-- NEW: WORKSPACE SHELL (shown after login) -->
+        <div id="workspaceShell" class="workspace-shell" style="display:none;">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-top">
+                    <button id="navProfileBtn" class="sidebar-btn">
+                        <span class="dot"></span>
+                        <span>Profile</span>
+                    </button>
                 </div>
-                <div id="groupsEmpty" class="sidebar-empty">
-                    No groups yet.
+
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">
+                        Groups
+                        <span class="sidebar-hint">0</span>
+                    </div>
+                    <div id="groupsEmpty" class="sidebar-empty">
+                        No groups yet.
+                    </div>
+                    <div id="groupsList" class="sidebar-list" style="display:none;"></div>
                 </div>
-                <div id="groupsList" class="sidebar-list" style="display:none;"></div>
-            </div>
 
-            <div class="sidebar-section scroll-section">
-                <div class="sidebar-section-title">
-                    Unarchived
-                    <span id="unarchivedCount" class="sidebar-hint">0</span>
+                <div class="sidebar-section scroll-section">
+                    <div class="sidebar-section-title">
+                        Unarchived
+                        <span id="unarchivedCount" class="sidebar-hint">0</span>
+                    </div>
+                    <div id="emailsEmpty" class="sidebar-empty">
+                        No emails.
+                    </div>
+                    <div id="emailsList" class="sidebar-list"></div>
                 </div>
-                <div id="emailsEmpty" class="sidebar-empty">
-                    No emails.
+
+                <div class="sidebar-bottom">
+                    <button id="logoutBtn" class="btn sidebar-logout">Logout</button>
                 </div>
-                <div id="emailsList" class="sidebar-list"></div>
-            </div>
+            </aside>
 
-            <div class="sidebar-bottom">
-                <button id="logoutBtn" class="btn sidebar-logout">Logout</button>
-                <div class="sidebar-footnote">Prototype UI · Local dev</div>
-            </div>
-        </aside>
+            <!-- Main area -->
+            <main class="workspace-main">
+                <section id="view-home" class="view">
+                    <div class="app-shell">
+                        <div class="card">
 
-        <!-- Main area -->
-        <main class="workspace-main">
-            <section id="view-home" class="view">
-                <div class="app-shell">
-                    <div class="card">
-
-                        <!-- Header -->
-                        <header class="header">
-                            <div class="title-wrap">
-                                <h1>
-                                    AI-Driven Trade Communication Assistant
-                                    <span class="title-pill">Prototype UI</span>
-                                </h1>
-                                <p class="subtitle">
-                                    Enter customer inquiries or order information to generate business emails,
-                                    trade documents, and risk assessments.
-                                </p>
-                            </div>
-                            <div style="display:flex; align-items:center; gap:12px;">
-                                <div class="status-pill">
-                                    ● Local dev · Backend expected at 127.0.0.1:8000
+                            <!-- Header -->
+                            <header class="header">
+                                <div class="title-wrap">
+                                    <h1>
+                                        AI-Driven Trade Communication Assistant
+                                        <span class="title-pill">Prototype UI</span>
+                                    </h1>
                                 </div>
-                            </div>
-                        </header>
+                            </header>
 
-                        <!-- Layout -->
-                        <main class="main-layout">
+                            <!-- Layout -->
+                            <main class="main-layout">
 
-                            <!-- LEFT: Input Panel -->
-                            <section class="panel">
+                                <!-- LEFT: Input Panel -->
+                                <section class="panel">
 
-                                <div class="panel-header">
-                                    <div class="panel-title">
-                                        Input Console
-                                        <span class="badge">Client → Backend → LLM</span>
-                                    </div>
-
-                                    <div class="tabs" id="modeTabs">
-                                        <button class="tab-btn active" data-mode="communication">Communication</button>
-                                        <button class="tab-btn" data-mode="document">Document</button>
-                                    </div>
-                                </div>
-
-                                <p class="subtitle" style="font-size:0.78rem; margin-top:-4px;">
-                                    Select mode, fill in fields, then click “Send Request”.
-                                </p>
-
-                                <!-- Communication Mode -->
-                                <div id="mode-communication">
-                                    <label>Customer Message</label>
-                                    <textarea
-                                        id="commMessage"
-                                        placeholder="Example: Hello, we are interested in your LED panel lights. Could you provide pricing and MOQ for export to France?"
-                                    ></textarea>
-                                </div>
-
-                                <!-- Document mode -->
-                                <section id="mode-document" class="mode-panel" style="display: none;">
-                                    <h2>Document generation</h2>
-
-                                    <div style="display:flex; gap:8px; margin-bottom:8px;">
-                                        <div style="flex:1;">
-                                            <label for="docType">Document type</label>
-                                            <select id="docType">
-                                                <option value="sales_contract">Sales contract</option>
-                                                <option value="quotation">Quotation</option>
-                                                <option value="product_manual">Product manual / instruction</option>
-                                            </select>
+                                    <div class="panel-header">
+                                        <div class="panel-title">
+                                            Input Console
+                                            <span class="badge">Client → Backend → LLM</span>
                                         </div>
 
-                                        <div style="flex:1;">
-                                            <label for="docCurrency">Currency</label>
-                                            <select id="docCurrency">
-                                                <option value="USD">USD</option>
-                                                <option value="EUR">EUR</option>
-                                                <option value="CNY">CNY</option>
-                                            </select>
+                                        <div class="tabs" id="modeTabs">
+                                            <button class="tab-btn active" data-mode="communication">Communication</button>
+                                            <button class="tab-btn" data-mode="document">Document</button>
                                         </div>
                                     </div>
 
-                                    <div style="display:flex; gap:8px; margin-bottom:8px;">
-                                        <div style="flex:1;">
-                                            <label for="docSeller">Seller / Supplier</label>
-                                            <input id="docSeller" type="text" placeholder="e.g. XYZ Lighting Co., Ltd." />
-                                        </div>
-                                        <div style="flex:1;">
-                                            <label for="docBuyer">Buyer / Customer</label>
-                                            <input id="docBuyer" type="text" placeholder="e.g. ABC Import GmbH" />
-                                        </div>
+                                    <p class="subtitle" style="font-size:0.78rem; margin-top:-4px;">
+                                        Fill in fields, then click “Send Request”.
+                                    </p>
+
+                                    <!-- Communication Mode -->
+                                    <div id="mode-communication">
+                                        <label>Customer Message</label>
+                                        <textarea
+                                            id="commMessage"
+                                            placeholder="Example: Hello, we are interested in your LED panel lights. Could you provide pricing and MOQ for export to France?"
+                                        ></textarea>
                                     </div>
 
-                                    <div style="display:flex; gap:8px; margin-bottom:8px;">
-                                        <div style="flex:2;">
-                                            <label for="docProduct">Product / service</label>
-                                            <input id="docProduct" type="text" placeholder="e.g. LED panel light 600x600, 40W" />
-                                        </div>
-                                        <div style="flex:1;">
-                                            <label for="docQuantity">Quantity</label>
-                                            <input id="docQuantity" type="number" min="0" />
-                                        </div>
-                                        <div style="flex:1;">
-                                            <label for="docUnitPrice">Unit price</label>
-                                            <input id="docUnitPrice" type="number" min="0" step="0.01" />
-                                        </div>
-                                    </div>
+                                    <!-- Document mode -->
+                                    <section id="mode-document" class="mode-panel" style="display: none;">
+                                        <h2>Document generation</h2>
 
-                                    <div style="display:flex; gap:8px; margin-bottom:8px;">
-                                        <div style="flex:1;">
-                                            <label for="docIncoterm">Incoterm</label>
-                                            <input id="docIncoterm" type="text" placeholder="e.g. FOB Shanghai / CIF Hamburg" />
+                                        <div style="display:flex; gap:8px; margin-bottom:8px;">
+                                            <div style="flex:1;">
+                                                <label for="docType">Document type</label>
+                                                <select id="docType">
+                                                    <option value="sales_contract">Sales contract</option>
+                                                    <option value="quotation">Quotation</option>
+                                                    <option value="product_manual">Product manual / instruction</option>
+                                                </select>
+                                            </div>
+
+                                            <div style="flex:1;">
+                                                <label for="docCurrency">Currency</label>
+                                                <select id="docCurrency">
+                                                    <option value="USD">USD</option>
+                                                    <option value="EUR">EUR</option>
+                                                    <option value="CNY">CNY</option>
+                                                </select>
+                                            </div>
                                         </div>
-                                        <div style="flex:1;">
-                                            <label for="docPaymentTerm">Payment term</label>
-                                            <input id="docPaymentTerm" type="text" placeholder="e.g. T/T 30% deposit, 70% before shipment" />
+
+                                        <div style="display:flex; gap:8px; margin-bottom:8px;">
+                                            <div style="flex:1;">
+                                                <label for="docSeller">Seller / Supplier</label>
+                                                <input id="docSeller" type="text" placeholder="e.g. XYZ Lighting Co., Ltd." />
+                                            </div>
+                                            <div style="flex:1;">
+                                                <label for="docBuyer">Buyer / Customer</label>
+                                                <input id="docBuyer" type="text" placeholder="e.g. ABC Import GmbH" />
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div id="docTemplateGroup" style="margin-bottom:8px;">
-                                        <label for="docTemplate">
-                                            Template file (optional, for contracts / quotations)
-                                            <span style="font-size: 0.8em; color:#666;">e.g. text / docx / template file</span>
-                                        </label>
-                                        <input id="docTemplate" type="file" />
-                                    </div>
+                                        <div style="display:flex; gap:8px; margin-bottom:8px;">
+                                            <div style="flex:2;">
+                                                <label for="docProduct">Product / service</label>
+                                                <input id="docProduct" type="text" placeholder="e.g. LED panel light 600x600, 40W" />
+                                            </div>
+                                            <div style="flex:1;">
+                                                <label for="docQuantity">Quantity</label>
+                                                <input id="docQuantity" type="number" min="0" />
+                                            </div>
+                                            <div style="flex:1;">
+                                                <label for="docUnitPrice">Unit price</label>
+                                                <input id="docUnitPrice" type="number" min="0" step="0.01" />
+                                            </div>
+                                        </div>
 
-                                    <div id="docImageGroup" style="margin-bottom:8px; display:none;">
-                                        <label for="docImage">
-                                            Product image (for manuals)
-                                            <span style="font-size: 0.8em; color:#666;">Image showing the product and its parts</span>
-                                        </label>
-                                        <input id="docImage" type="file" accept="image/*" />
-                                    </div>
+                                        <div style="display:flex; gap:8px; margin-bottom:8px;">
+                                            <div style="flex:1;">
+                                                <label for="docIncoterm">Incoterm</label>
+                                                <input id="docIncoterm" type="text" placeholder="e.g. FOB Shanghai / CIF Hamburg" />
+                                            </div>
+                                            <div style="flex:1;">
+                                                <label for="docPaymentTerm">Payment term</label>
+                                                <input id="docPaymentTerm" type="text" placeholder="e.g. T/T 30% deposit, 70% before shipment" />
+                                            </div>
+                                        </div>
 
-                                    <div style="margin-bottom:8px;">
-                                        <label for="docExtra">
-                                            Extra notes / technical details / instructions
-                                            <span style="font-size: 0.8em; color: #666;">
-                                                For manuals, describe each part and its function here; for contracts/quotations, add special terms.
-                                            </span>
-                                        </label>
-                                        <textarea id="docExtra" rows="5"
-                                        placeholder="E.g. part A = power switch, part B = indicator, safety instructions, warranty terms, delivery time, etc."></textarea>
+                                        <div id="docTemplateGroup" style="margin-bottom:8px;">
+                                            <label for="docTemplate">
+                                                Template file (optional, for contracts / quotations)
+                                                <span style="font-size: 0.8em; color:#666;">e.g. text / docx / template file</span>
+                                            </label>
+                                            <input id="docTemplate" type="file" />
+                                        </div>
+
+                                        <div id="docImageGroup" style="margin-bottom:8px; display:none;">
+                                            <label for="docImage">
+                                                Product image (for manuals)
+                                                <span style="font-size: 0.8em; color:#666;">Image showing the product and its parts</span>
+                                            </label>
+                                            <input id="docImage" type="file" accept="image/*" />
+                                        </div>
+
+                                        <div style="margin-bottom:8px;">
+                                            <label for="docExtra">
+                                                Extra notes / technical details / instructions
+                                                <span style="font-size: 0.8em; color: #666;">
+                                                    For manuals, describe each part and its function here; for contracts/quotations, add special terms.
+                                                </span>
+                                            </label>
+                                            <textarea id="docExtra" rows="5"
+                                            placeholder="E.g. part A = power switch, part B = indicator, safety instructions, warranty terms, delivery time, etc."></textarea>
+                                        </div>
+                                    </section>
+
+                                    <div style="margin-top:10px; display:flex; justify-content:flex-end; gap:8px;">
+                                        <button class="btn" id="btnClear">Clear</button>
+                                        <button class="btn btn-primary" id="btnSubmit">Send Request</button>
                                     </div>
                                 </section>
 
-                                <div style="margin-top:10px; display:flex; justify-content:flex-end; gap:8px;">
-                                    <button class="btn" id="btnClear">Clear</button>
-                                    <button class="btn btn-primary" id="btnSubmit">Send Request</button>
-                                </div>
-                            </section>
+                                <!-- RIGHT: Output Panel -->
+                                <section class="panel">
+                                    <div class="panel-header">
+                                        <div class="panel-title">Response</div>
+                                    </div>
 
-                            <!-- RIGHT: Output Panel -->
-                            <section class="panel">
-                                <div class="panel-header">
-                                    <div class="panel-title">Response</div>
-                                </div>
+                                    <div class="response-body" id="responseBody">
+                                        The AI response will appear here.
+                                    </div>
+                                </section>
+                            </main>
 
-                                <div class="response-body" id="responseBody">
-                                    The AI response will appear here.
-                                </div>
-                            </section>
-                        </main>
-
-                        <footer class="footer">
-                            <span>Frontend: HTML + Vanilla JS</span>
-                            <span>Backend expected endpoints: /api/chat · /api/document</span>
-                        </footer>
-                    </div>
-                </div>
-            </section>
-
-            <!-- VIEW: PROFILE -->
-            <section id="view-profile" class="view" style="display:none;">
-                <div class="view-card">
-                    <div class="view-head">
-                        <h2>Profile</h2>
-                        <button class="btn btn-primary" id="profileBackBtn">Back</button>
-                    </div>
-
-                    <p id="profileStatus" class="subtitle" style="margin-top:10px;">
-                        Loading...
-                    </p>
-
-                    <div class="kv">
-                        <div><span class="k">UID:</span> <span id="profileUid">-</span></div>
-                        <div><span class="k">Username:</span> <span id="profileUserName">-</span></div>
-                        <div><span class="k">Role:</span> <span id="profileRole">-</span></div>
-                        <div><span class="k">Name:</span> <span id="profileName">-</span></div>
-                        <div><span class="k">Company:</span> <span id="profileCompanyName">-</span></div>
-                        <div><span class="k">Email:</span> <span id="profileEmail">-</span></div>
-                        <div><span class="k">Phone:</span> <span id="profilePhone">-</span></div>
-                        <div><span class="k">Region:</span> <span id="profileRegion">-</span></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- VIEW: EMAIL DETAIL -->
-            <section id="view-email-detail" class="view" style="display:none;">
-                <div class="view-card">
-                    <div class="view-head">
-                        <h2 id="emailDetailTitle">Email</h2>
-                        <div class="view-actions">
-                            <button class="btn btn-danger" id="emailDetailDeleteBtn">Delete</button>
-                            <button class="btn btn-primary" id="emailDetailBackBtn">Back</button>
+                            <footer class="footer">
+                                <span>Frontend: HTML</span>
+                            </footer>
                         </div>
                     </div>
+                </section>
 
-                    <div class="kv">
-                        <div><span class="k">From:</span> <span id="emailDetailFrom">-</span></div>
-                        <div><span class="k">Customer type:</span> <span id="emailDetailCustomerType">-</span></div>
-                        <div><span class="k">Files:</span> <span id="emailDetailFiles">-</span></div>
-                        <div><span class="k">Risks:</span> <span id="emailDetailRisks">-</span></div>
+                <!-- VIEW: PROFILE -->
+                <section id="view-profile" class="view" style="display:none;">
+                    <div class="view-card">
+                        <div class="view-head">
+                            <h2>Profile</h2>
+                            <button class="btn btn-primary" id="profileBackBtn">Back</button>
+                        </div>
+
+                        <p id="profileStatus" class="subtitle" style="margin-top:10px;">
+                            Loading...
+                        </p>
+
+                        <div class="kv">
+                            <div><span class="k">UID:</span> <span id="profileUid">-</span></div>
+                            <div><span class="k">Username:</span> <span id="profileUserName">-</span></div>
+                            <div><span class="k">Role:</span> <span id="profileRole">-</span></div>
+                            <div><span class="k">Name:</span> <span id="profileName">-</span></div>
+                            <div><span class="k">Company:</span> <span id="profileCompanyName">-</span></div>
+                            <div><span class="k">Email:</span> <span id="profileEmail">-</span></div>
+                            <div><span class="k">Phone:</span> <span id="profilePhone">-</span></div>
+                            <div><span class="k">Region:</span> <span id="profileRegion">-</span></div>
+                        </div>
                     </div>
+                </section>
 
-                    <div class="panel" style="margin-top: 14px;">
-                        <h3 style="margin: 0 0 10px 0;">Email body</h3>
-                        <div id="emailDetailBodyBox" class="mono-box">(empty)</div>
+                <!-- VIEW: EMAIL DETAIL -->
+                <section id="view-email-detail" class="view" style="display:none;">
+                    <div class="view-card">
+                        <div class="view-head">
+                            <h2 id="emailDetailTitle">Email</h2>
+                            <div class="view-actions">
+                                <button class="btn btn-danger" id="emailDetailDeleteBtn">Delete</button>
+                                <button class="btn btn-primary" id="emailDetailBackBtn">Back</button>
+                            </div>
+                        </div>
+
+                        <div class="kv">
+                            <div><span class="k">From:</span> <span id="emailDetailFrom">-</span></div>
+                            <div><span class="k">Customer type:</span> <span id="emailDetailCustomerType">-</span></div>
+                            <div><span class="k">Files:</span> <span id="emailDetailFiles">-</span></div>
+                            <div><span class="k">Risks:</span> <span id="emailDetailRisks">-</span></div>
+                        </div>
+
+                        <div class="panel" style="margin-top: 14px;">
+                            <h3 style="margin: 0 0 10px 0;">Email body</h3>
+                            <div id="emailDetailBodyBox" class="mono-box">(empty)</div>
+                        </div>
+
+                        <div class="panel" style="margin-top: 14px;">
+                            <h3 style="margin: 0 0 10px 0;">Reply</h3>
+                            <div id="emailDetailReplyBox" class="mono-box">No reply</div>
+                        </div>
                     </div>
+                </section>
+            </main>
+        </div>
 
-                    <div class="panel" style="margin-top: 14px;">
-                        <h3 style="margin: 0 0 10px 0;">Reply</h3>
-                        <div id="emailDetailReplyBox" class="mono-box">No reply</div>
-                    </div>
-
-                    <p class="subtitle" style="margin-top:14px;">
-                        Placeholder. Detailed layout to be added later.
-                    </p>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <script type="module" src="main.js"></script>
-</body>
+        <script type="module" src="main.js"></script>
+    </body>
 </html>

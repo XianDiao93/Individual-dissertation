@@ -272,12 +272,9 @@ def build_document_text(
     Public function: use LLM to build document text, with a simple fallback.
     """
     try:
-        # Primary path: use LLM
+
         return generate_document_text(data=data, template_text=template_text)
     except Exception as e:
-        # Fallback to deterministic templates if something goes wrong
-        # (e.g. API error, network issue)
-        # You might want to log this exception in a real system.
         if data.document_type in (DocumentType.sales_contract, DocumentType.quotation):
             return _fallback_contract_or_quotation_text(data)
         else:

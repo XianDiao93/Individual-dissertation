@@ -4,7 +4,6 @@ from fastapi.responses import StreamingResponse
 from typing import Optional
 from io import BytesIO
 from pathlib import Path
-import datetime
 
 from app.models.doc_model import BaseDocumentData, DocumentType
 from app.services.document import (
@@ -13,9 +12,7 @@ from app.services.document import (
 )
 from app.utils.file_utils import save_bytes_to_output, save_upload_to_output
 
-
 router = APIRouter()
-
 
 async def _read_template_text(template_file: Optional[UploadFile]) -> str:
     """
@@ -36,7 +33,7 @@ async def _read_template_text(template_file: Optional[UploadFile]) -> str:
 @router.post("/document/pdf")
 async def generate_document_pdf(
     # Form fields (common)
-    document_type: str = Form(...),   # "sales_contract" / "quotation" / "product_manual"
+    document_type: str = Form(...),
     currency: str = Form(...),
     seller_name: str = Form(...),
     buyer_name: str = Form(...),

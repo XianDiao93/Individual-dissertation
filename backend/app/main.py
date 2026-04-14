@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers.com_router import router as com_router
 from app.routers.doc_router import router as doc_router
-#from app.routers.risk_router import router as risk_router
 from app.routers.auth_router import router as auth_router
 from app.routers.profile_router import router as profile_router
 from app.routers.email_router import router as email_router
@@ -16,7 +15,6 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# ⭐ 显式写出允许的前端来源
 origins = [
     "http://127.0.0.1:5500",
     "http://localhost:5500",
@@ -27,7 +25,7 @@ app.add_middleware(
     allow_origins=[
         "http://127.0.0.1:5500",
         "http://localhost:5500",
-        "http://127.0.0.1:5173",   # 如果你以后用 Vite
+        "http://127.0.0.1:5173",
         "http://localhost:5173",
     ],
     allow_credentials=True,

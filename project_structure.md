@@ -27,7 +27,6 @@ Individual dissertation/
 |  |  |  |- com_router.py
 |  |  |  |- doc_router.py
 |  |  |  |- risk_router.py
-|  |  |  |- screening_router.py
 |  |  |  |- email_router.py
 |  |  |  |- group_router.py
 |  |  |  |- auth_router.py
@@ -54,8 +53,6 @@ Individual dissertation/
 |  |  |  |- profile.py
 |  |  |  |- auth.py
 |  |  |  |- user_data_store.py
-|  |  |  |- id_service.py
-|  |  |  |- email_enrichment.py
 |  |  |
 |  |  |- models/
 |  |  |  |- __init__.py
@@ -70,7 +67,7 @@ Individual dissertation/
 |  |  |  |- profile_model.py
 |  |  |  |- common_model.py
 |  |  |
-|  |  |- database/                     #The data from open source database
+|  |  |- database/
 |  |  |  |- system_prompts/
 |  |  |  |  |- chat_basic.json
 |  |  |  |  |- doc_basic.json
@@ -108,83 +105,77 @@ Individual dissertation/
 |  |- README.md
 |
 |- frontend/
-|  |- public/
 |  |- src/
 |  |  |- index.html
 |  |  |- main.js
 |  |  |- api.js
 |  |  |- styles.css
-|  |  |- components/
-|  |     |- InputPanel.js
-|  |     |- OutputPanel.js
-|  |     |- RiskBanner.js
 |  |
-|  |- package.json
+|  |- public
 |  |- README.md
 |
 |- data/
 |  |- raw/
+|  |  |- business_emails/
+|  |  |- business_text/
+|  |  |- contract_templates/
+|  |  |- multilingual/
+|  |  |- multilingual_tone/
+|  |  |- user_manual_templates/
 |  |- processed/
 |  |  |- dataset.json
-|  |- prompts/
-|  |  |- communication_examples.json
-|  |  |- document_examples.json
-|  |  |- risk_examples.json
 |  |- documents_templates/
-|  |  |- pi_template.docx
-|  |  |- invoice_template.docx
+|  |- survey/
+|  |  |- example_input_and_expected_output/
+|  |     |- block_cases.json
+|  |     |- localization_cases.json
+|  |     |- normal_cases.json
+|  |     |- warn_cases.json
 |  |- README.md
-|
-|- experiments/
-|  |- notebooks/
-|  |  |- screening_eval.ipynb
-|  |  |- prompt_ablation.ipynb
-|  |  |- user_study_analysis.ipynb
-|  |- logs/
-|  |- results/
 |
 |- docs/
 |  |- proposal/
 |  |  |- 20513832_Xian_Diao_Proposal.pdf
-|  |- literature/
-|  |  |- reading_notes.md
-|  |  |- references.bib
 |  |- report/
-|  |  |- interim_report.docx
-|  |  |- dissertation_draft.docx
-|  |  |- figures/
+|  |  |- interim_report.pdf
+|  |  |- final_report.pdf
+|  |- ethic_related/
+|  |  |- 20513832_Xian_Diao_CS_REC_2 SOP2.2_Text_Data.pdf
+|  |  |- 20513832_Xian_Diao_Data_Management_Plan.pdf
 |  |- slides/
 |     |- final_presentation.pptx
 |
-|- models/
-|  |- finetuned/
-|  |- README.md
-|
 |- output/
+|  |- documents/
+|     |- sales_contract_20251130_180806.pdf
+|     |- sales_contract_20260309_094043.pdf
 |
 |- user_data/
-|  |- users.json                 # 模拟账号列表（登录用）
-|  |- user_data/                  # 每个用户的业务画像/偏好
+|  |- users.json
+|  |- user_data/
 |  |  |- 0001/
-|  |  |  |- documents
+|  |  |  |- documents/
 |  |  |  |- emails/
 |  |  |  |  |- em_00001.json
 |  |  |  |  |- em_00002.json
+|  |  |  |  |- ...
 |  |  |  |- profile.json
 |  |  |- 0002/
-|  |     |- documents
+|  |     |- documents/
 |  |     |- emails/
 |  |     |  |- em_00001.json
 |  |     |  |- em_00002.json
+|  |  |  |  |- ...
 |  |     |- profile.json
-|  |- surveys/                   # 问卷与回答（你最需要）
-|  |  |- survey_schema.json
-|  |  |- responses/
-|  |     |- 0001_response.json
-|  |- logs/                      # 用户操作日志（用于评估）
-|     |- 0001_cases.json
+|  |  |- 0003/
+|  |     |- documents/
+|  |     |- emails/
+|  |     |  |- em_00001.json
+|  |     |  |- em_00002.json
+|  |  |  |  |- ...
+|  |     |- profile.json
+|  |- logs/
 |
 |- .gitignore
 |- README.md
-|- project_config_example.json
 |- project_structure.md     // this file

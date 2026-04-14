@@ -63,12 +63,7 @@ def _highest_severity(severities: List[str]) -> str:
 
 
 def _level_from_total_score(total_score: int) -> str:
-    """
-    综合分数映射规则：
-    0分也视为 low，而不是 unknown
-    1-2 个 low tag 仍然是 low
-    多个 low tag（例如 5~6 个）会升到 medium
-    """
+
     if total_score <= 2:
         return "low"
     if total_score <= 7:
@@ -79,13 +74,7 @@ def _level_from_total_score(total_score: int) -> str:
 
 
 def _final_level_from_severities(severities: List[str]) -> str:
-    """
-    综合规则：
-    1. 没有任何 severity 时，默认 low
-    2. critical 直接 critical
-    3. high 至少保证最终为 high
-    4. 其余根据累计分数判断
-    """
+
     if not severities:
         return "low"
 

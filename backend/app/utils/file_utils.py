@@ -4,7 +4,6 @@ import datetime
 
 
 # Project root = ".../Individual dissertation"
-# file_utils.py 在 backend/app/utils/ 下，所以 parents[3] = project root
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 # Global output directory for generated documents
@@ -51,5 +50,5 @@ def save_upload_to_output(upload_file, prefix: str) -> Path:
     suffix = Path(upload_file.filename).suffix or ""
     filename = make_timestamped_filename(prefix, suffix or ".bin")
     path = out_dir / filename
-    # The router will write bytes into this path.
+    
     return path

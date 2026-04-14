@@ -19,7 +19,7 @@ from typing import Dict, Optional, Tuple, Any
 # ---------------------------
 
 ALGO = "pbkdf2_sha256"
-DEFAUT_ITERATIONS = 260_000  # 保留不影响验证（验证时从 stored 字符串解析）
+DEFAUT_ITERATIONS = 260_000
 
 
 def _b64_decode_nopad(s: str) -> bytes:
