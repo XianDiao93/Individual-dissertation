@@ -24,10 +24,7 @@ from app.utils.llm_reply_utils import (
 )
 
 
-# =========================================================
 # OpenAI client setup
-# =========================================================
-
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 if not OPENAI_API_KEY:
@@ -39,10 +36,7 @@ if not OPENAI_API_KEY:
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
-# =========================================================
 # Prompt bundle loaders
-# =========================================================
-
 @lru_cache(maxsize=8)
 def _load_chat_prompt_bundle() -> dict:
     """
@@ -63,10 +57,7 @@ def _load_doc_prompt_bundle() -> dict:
         return json.load(f)
 
 
-# =========================================================
 # Public API: communication generation
-# =========================================================
-
 def generate_business_reply(
     message: str,
     language: str = "auto",
@@ -212,10 +203,7 @@ def generate_business_reply(
     )
 
 
-# =========================================================
 # Public API: document generation
-# =========================================================
-
 def generate_document_text(
     data: BaseDocumentData,
     template_text: Optional[str] = None,

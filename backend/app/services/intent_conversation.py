@@ -6,6 +6,7 @@ import re
 from typing import Any, Dict, List
 
 
+# Patterns suggesting weak or unclear purchase intent
 LOW_INTENT_PATTERNS = [
     r"\bprice list\b",
     r"\bcatalog\b",
@@ -17,6 +18,7 @@ LOW_INTENT_PATTERNS = [
     r"\bbest price\b",
 ]
 
+# Patterns suggesting information gathering without clear trade context
 INFO_FISHING_PATTERNS = [
     r"\bfull product list\b",
     r"\ball products\b",
@@ -28,6 +30,7 @@ INFO_FISHING_PATTERNS = [
     r"\bshare your supplier details\b",
 ]
 
+# Patterns suggesting generic bulk-style inquiry
 MASS_INQUIRY_PATTERNS = [
     r"\bdear sir/madam\b",
     r"\bto whom it may concern\b",
@@ -36,6 +39,7 @@ MASS_INQUIRY_PATTERNS = [
     r"\bplease share more details\b",
 ]
 
+# Patterns suggesting concrete purchase-related intent
 PURCHASE_SIGNALS = [
     r"\border\b",
     r"\bpurchase\b",
@@ -51,12 +55,18 @@ PURCHASE_SIGNALS = [
 
 
 def _normalize_text(text: str) -> str:
+    """
+    Normalize input text for pattern matching.
+    """
     text = (text or "").strip().lower()
     text = re.sub(r"\s+", " ", text)
     return text
 
 
 def _has_any_pattern(text: str, patterns: List[str]) -> bool:
+    """
+    Check whether text matches any regex pattern in the given list.
+    """
     for pattern in patterns:
         if re.search(pattern, text, flags=re.IGNORECASE):
             return True
@@ -64,6 +74,9 @@ def _has_any_pattern(text: str, patterns: List[str]) -> bool:
 
 
 def analyze(normalized_facts: Dict[str, Any], raw_message: str = "") -> Dict[str, Any]:
+    """
+    Analyze intent and conversation-level risks from the message and extracted facts.
+    """
     text = _normalize_text(raw_message)
 
     tags: list[str] = []
@@ -80,17 +93,17 @@ def analyze(normalized_facts: Dict[str, Any], raw_message: str = "") -> Dict[str
     purchase_signal_present = _has_any_pattern(text, PURCHASE_SIGNALS)
 
     # 1. Low purchase intent:
-    # message mostly asks for price/catalog without clear buying context
+    # message mainly asks for price/catalog without clear buying context
     if _has_any_pattern(text, LOW_INTENT_PATTERNS) and not purchase_signal_present:
         tags.append("low_purchase_intent")
 
     # 2. Information fishing:
-    # asking for lots of information but giving little concrete trade context
+    # asks for extensive business or technical information with limited transaction context
     if _has_any_pattern(text, INFO_FISHING_PATTERNS):
         tags.append("information_fishing")
 
     # 3. Incomplete buyer profile:
-    # key sender/company context missing
+    # important sender / company context is missing
     incomplete_count = 0
     if not company_name:
         incomplete_count += 1
@@ -105,12 +118,12 @@ def analyze(normalized_facts: Dict[str, Any], raw_message: str = "") -> Dict[str
         tags.append("incomplete_buyer_profile")
 
     # 4. Mass inquiry:
-    # generic message with little specific context
+    # generic short inquiry with little specific detail
     if _has_any_pattern(text, MASS_INQUIRY_PATTERNS):
         if len(text) < 300:
             tags.append("mass_inquiry")
 
-    # deduplicate
+    # Remove duplicate tags
     tags = sorted(set(tags))
 
     summary = None

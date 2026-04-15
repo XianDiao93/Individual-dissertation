@@ -12,10 +12,12 @@ from app.config import PROJECT_ROOT
 from app.services.llm_client import client
 
 
+# Path to extraction prompt config
 EXTRACTION_PROMPT_PATH = (
     PROJECT_ROOT / "backend" / "app" / "database" / "system_prompts" / "extraction_basic.json"
 )
 
+# Path to country code / alias mapping
 COUNTRY_CODES_PATH = (
     PROJECT_ROOT / "backend" / "app" / "database" / "regions" / "country_codes.json"
 )
@@ -23,6 +25,9 @@ COUNTRY_CODES_PATH = (
 
 @lru_cache(maxsize=1)
 def _load_extraction_prompt_bundle() -> Dict[str, Any]:
+    """
+    Load extraction prompt bundle from JSON.
+    """
     if not EXTRACTION_PROMPT_PATH.exists():
         raise FileNotFoundError(f"Extraction prompt file not found: {EXTRACTION_PROMPT_PATH}")
 
@@ -50,6 +55,9 @@ def _build_prompts(
     user_region: Optional[str] = None,
     preferred_language: Optional[str] = None,
 ) -> tuple[str, str, Dict[str, Any]]:
+    """
+    Build system prompt and user prompt for extraction.
+    """
     bundle = _load_extraction_prompt_bundle()
 
     system_prompt = str(bundle["system_prompt"]).strip()
@@ -65,6 +73,9 @@ def _build_prompts(
 
 
 def _strip_accents(text: str) -> str:
+    """
+    Remove accent marks from text for easier normalization.
+    """
     return "".join(
         ch for ch in unicodedata.normalize("NFKD", text)
         if not unicodedata.combining(ch)
@@ -72,6 +83,9 @@ def _strip_accents(text: str) -> str:
 
 
 def _normalize_country_key(text: str) -> str:
+    """
+    Normalize country name / alias into a comparable lookup key.
+    """
     text = (text or "").strip()
     if not text:
         return ""
@@ -88,7 +102,9 @@ def _normalize_country_key(text: str) -> str:
 
 @lru_cache(maxsize=1)
 def _load_country_data() -> tuple[Dict[str, str], Dict[str, str]]:
-
+    """
+    Load canonical country names and alias lookup table.
+    """
     if not COUNTRY_CODES_PATH.exists():
         return {}, {}
 
@@ -130,6 +146,7 @@ def _load_country_data() -> tuple[Dict[str, str], Dict[str, str]]:
             if code_str:
                 canonical_names[code_str] = name_str
 
+    # Add canonical country names and country codes into alias lookup
     for code, name in canonical_names.items():
         norm_name = _normalize_country_key(name)
         if norm_name:
@@ -141,6 +158,9 @@ def _load_country_data() -> tuple[Dict[str, str], Dict[str, str]]:
 
 
 def _clean_str(value: Any) -> str:
+    """
+    Normalize string-like values and convert null-like values to empty string.
+    """
     if value is None:
         return ""
     if isinstance(value, str):
@@ -152,10 +172,16 @@ def _clean_str(value: Any) -> str:
 
 
 def _is_ambiguous_country_value(value: Any) -> bool:
+    """
+    Check whether a country value is explicitly marked as ambiguous.
+    """
     return _clean_str(value).lower() == "ambiguous"
 
 
 def _country_name_to_code(country_name: str) -> str:
+    """
+    Convert country name or alias into ISO-like country code if possible.
+    """
     if not country_name:
         return ""
 
@@ -180,10 +206,12 @@ def _country_name_to_code(country_name: str) -> str:
     if code:
         return code
 
+    # Exact alias match fallback
     for known_alias, known_code in alias_lookup.items():
         if norm == known_alias:
             return known_code
 
+    # Loose containment fallback
     for known_alias, known_code in alias_lookup.items():
         if norm in known_alias or known_alias in norm:
             return known_code
@@ -192,6 +220,9 @@ def _country_name_to_code(country_name: str) -> str:
 
 
 def _code_to_canonical_country_name(code: str) -> str:
+    """
+    Convert country code back to canonical country name.
+    """
     if not code:
         return ""
     canonical_names, _ = _load_country_data()
@@ -199,6 +230,9 @@ def _code_to_canonical_country_name(code: str) -> str:
 
 
 def _strip_code_fences(text: str) -> str:
+    """
+    Remove Markdown code fences from model output.
+    """
     text = text.strip()
     if text.startswith("```"):
         text = re.sub(r"^```[a-zA-Z0-9_-]*\n?", "", text)
@@ -207,17 +241,23 @@ def _strip_code_fences(text: str) -> str:
 
 
 def _extract_json_object(text: str) -> str:
+    """
+    Extract the main JSON object from raw model output.
+    """
     text = _strip_code_fences(text)
 
     start = text.find("{")
     end = text.rfind("}")
     if start != -1 and end != -1 and end > start:
-        return text[start : end + 1]
+        return text[start: end + 1]
 
     return text
 
 
 def _safe_json_loads(text: str) -> Dict[str, Any]:
+    """
+    Parse JSON safely, with simple repair for minor formatting issues.
+    """
     candidate = _extract_json_object(text)
 
     try:
@@ -242,6 +282,9 @@ def _safe_json_loads(text: str) -> Dict[str, Any]:
 
 
 def _guess_message_type(raw_message: str, llm_value: str) -> str:
+    """
+    Infer message type as email or chat.
+    """
     val = _clean_str(llm_value).lower()
     if val in {"email", "chat"}:
         return val
@@ -263,7 +306,9 @@ def _guess_message_type(raw_message: str, llm_value: str) -> str:
 
 
 def _detect_missing_fields(data: Dict[str, Any]) -> list[str]:
-
+    """
+    Detect important fields that are still missing after extraction.
+    """
     important_fields = [
         "product_requested",
         "origin_country_code",
@@ -273,6 +318,9 @@ def _detect_missing_fields(data: Dict[str, Any]) -> list[str]:
 
 
 def _detect_ambiguity_flags(data: Dict[str, Any]) -> list[str]:
+    """
+    Detect ambiguity flags for extracted country fields.
+    """
     flags: list[str] = []
 
     if _is_ambiguous_country_value(data.get("origin_country_name")):
@@ -289,6 +337,9 @@ def _ensure_required_fields(
     required_fields: list[str],
     default_values: Dict[str, Any],
 ) -> Dict[str, Any]:
+    """
+    Ensure all required fields exist in extraction output.
+    """
     result: Dict[str, Any] = {}
     for field in required_fields:
         result[field] = llm_data.get(field, default_values.get(field, ""))
@@ -296,7 +347,9 @@ def _ensure_required_fields(
 
 
 def _normalize_country_fields(base: Dict[str, Any]) -> tuple[str, str, str, str]:
-
+    """
+    Normalize origin and destination country names and codes.
+    """
     raw_origin = _clean_str(base.get("origin_country_name"))
     raw_destination = _clean_str(base.get("destination_country_name"))
 
@@ -323,6 +376,9 @@ def _postprocess_extraction(
     required_fields: list[str],
     default_values: Dict[str, Any],
 ) -> Dict[str, Any]:
+    """
+    Postprocess raw LLM extraction output into normalized trade facts.
+    """
     base = _ensure_required_fields(llm_data, required_fields, default_values)
 
     (
@@ -360,6 +416,9 @@ def _build_empty_result(
     required_fields: list[str],
     default_values: Dict[str, Any],
 ) -> Dict[str, Any]:
+    """
+    Build an empty extraction result for blank input.
+    """
     base = {field: default_values.get(field, "") for field in required_fields}
 
     result: Dict[str, Any] = {
@@ -390,12 +449,16 @@ def extract_trade_facts(
     preferred_language: Optional[str] = None,
     model: str = "gpt-4o-mini",
 ) -> Dict[str, Any]:
+    """
+    Extract structured trade facts from an input message.
+    """
     raw_message = (message or "").strip()
 
     bundle = _load_extraction_prompt_bundle()
     required_fields = list(bundle.get("required_fields", []))
     default_values = dict(bundle.get("default_values", {}))
 
+    # Return empty structured result for blank input
     if not raw_message:
         return _build_empty_result(
             raw_message="",
@@ -404,12 +467,14 @@ def extract_trade_facts(
             default_values=default_values,
         )
 
+    # Build prompts for extraction
     system_prompt, user_prompt, _ = _build_prompts(
         message=raw_message,
         user_region=user_region,
         preferred_language=preferred_language,
     )
 
+    # Call LLM for JSON extraction
     response = client.responses.create(
         model=model,
         input=[
@@ -422,6 +487,7 @@ def extract_trade_facts(
     if not output_text:
         output_text = str(response)
 
+    # Parse and normalize extraction result
     llm_data = _safe_json_loads(output_text)
 
     return _postprocess_extraction(

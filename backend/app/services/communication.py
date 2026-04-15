@@ -46,12 +46,15 @@ def generate_reply(
     risk_result:
         Risk analysis result produced by risk.py
     """
+    # Make a safe copy of normalized facts
     safe_facts = dict(normalized_facts or {})
     ambiguity_flags = safe_facts.get("ambiguity_flags")
 
+    # Ensure ambiguity_flags is always a list
     if not isinstance(ambiguity_flags, list):
         safe_facts["ambiguity_flags"] = []
 
+    # Use default risk structure if no risk result is provided
     safe_risk = risk_result or {
         "decision": "CLEAR",
         "risk_tags": [],
@@ -63,6 +66,7 @@ def generate_reply(
         "by_category": {},
     }
 
+    # Delegate reply generation to the LLM client layer
     return generate_business_reply(
         message=message,
         language=language,

@@ -14,6 +14,9 @@ profile_service = ProfileService()
 
 
 def _get_bearer_token(authorization: Optional[str]) -> Optional[str]:
+    """
+    Extract Bearer token from Authorization header.
+    """
     if not authorization:
         return None
     if not authorization.startswith("Bearer "):
@@ -25,6 +28,9 @@ def _get_bearer_token(authorization: Optional[str]) -> Optional[str]:
 async def get_my_profile(
     authorization: Optional[str] = Header(default=None),
 ) -> ProfileResponse:
+    """
+    Retrieve the current user's profile.
+    """
     token = _get_bearer_token(authorization)
     if not token:
         return ProfileResponse(ok=False, error="missing_token")
@@ -46,6 +52,9 @@ async def update_my_profile(
     req: ProfileUpdateRequest,
     authorization: Optional[str] = Header(default=None),
 ) -> ProfileResponse:
+    """
+    Update the current user's profile fields.
+    """
     token = _get_bearer_token(authorization)
     if not token:
         return ProfileResponse(ok=False, error="missing_token")

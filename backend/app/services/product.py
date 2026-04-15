@@ -10,6 +10,7 @@ from typing import Any, Dict
 from app.config import PROJECT_ROOT
 
 
+# Path to product risk keyword configuration
 PRODUCT_KEYWORDS_PATH = (
     PROJECT_ROOT
     / "backend"
@@ -23,6 +24,15 @@ PRODUCT_KEYWORDS_PATH = (
 
 @lru_cache(maxsize=1)
 def _load_product_keywords() -> Dict[str, list[str]]:
+    """
+    Load product-related risk keywords from JSON.
+
+    Structure example:
+    {
+        "hazardous_chemical": ["oxidizer", "toxic chemical"],
+        "dual_use_goods": ["drone", "surveillance equipment"]
+    }
+    """
     if not PRODUCT_KEYWORDS_PATH.exists():
         return {}
 
@@ -35,11 +45,18 @@ def _load_product_keywords() -> Dict[str, list[str]]:
     result: Dict[str, list[str]] = {}
     for tag, keywords in data.items():
         if isinstance(keywords, list):
-            result[str(tag)] = [str(keyword).lower().strip() for keyword in keywords if str(keyword).strip()]
+            result[str(tag)] = [
+                str(keyword).lower().strip()
+                for keyword in keywords
+                if str(keyword).strip()
+            ]
     return result
 
 
 def _normalize_text(text: str) -> str:
+    """
+    Normalize text for keyword matching.
+    """
     text = (text or "").lower().strip()
     text = re.sub(r"[_/,-]+", " ", text)
     text = re.sub(r"\s+", " ", text)
@@ -47,12 +64,19 @@ def _normalize_text(text: str) -> str:
 
 
 def analyze(normalized_facts: Dict[str, Any], raw_message: str = "") -> Dict[str, Any]:
+    """
+    Detect product-related risks based on keywords in product description and message.
+
+    Combines structured field (product_requested) and raw message text
+    to improve recall.
+    """
     product_text = str(normalized_facts.get("product_requested", "")).strip()
     haystack = _normalize_text(f"{product_text} {raw_message}")
 
     db = _load_product_keywords()
     matched_tags: list[str] = []
 
+    # Match keywords against normalized text
     for tag, keywords in db.items():
         for keyword in keywords:
             keyword_norm = _normalize_text(keyword)
@@ -60,11 +84,15 @@ def analyze(normalized_facts: Dict[str, Any], raw_message: str = "") -> Dict[str
                 matched_tags.append(tag)
                 break
 
+    # Remove duplicates and sort
     matched_tags = sorted(set(matched_tags))
 
     summary = None
     if matched_tags:
-        summary = f"Product-related risk tags matched from product description/text: {', '.join(matched_tags)}."
+        summary = (
+            f"Product-related risk tags matched from product description/text: "
+            f"{', '.join(matched_tags)}."
+        )
 
     return {
         "category": "product",

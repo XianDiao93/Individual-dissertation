@@ -5,12 +5,20 @@ from __future__ import annotations
 from typing import List, Optional, Literal
 from pydantic import BaseModel, Field, ConfigDict
 
+# Risk level used for overall email risk
 RiskLevel = Literal["unknown", "low", "medium", "high", "critical"]
+
+# Severity used for individual risk tags
 RiskSeverity = Literal["unknown", "low", "medium", "high", "critical"]
+
+# Email processing status
 EmailStatus = Literal["draft", "enriched", "replied"]
 
 
 class EmailRiskTag(BaseModel):
+    """
+    Single risk tag with severity.
+    """
     model_config = ConfigDict(extra="ignore")
 
     tag: str
@@ -18,6 +26,9 @@ class EmailRiskTag(BaseModel):
 
 
 class EmailRisk(BaseModel):
+    """
+    Overall risk information for an email.
+    """
     model_config = ConfigDict(extra="ignore")
 
     level: RiskLevel = "unknown"
@@ -31,7 +42,7 @@ class EmailItem(BaseModel):
     """
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
-    id: str = Field(..., pattern=r"^\d{5}$")
+    id: str = Field(..., pattern=r"^\d{5}$")  # 5-digit email ID
     source_region: Optional[str] = None
     language: Optional[str] = None
     subject: Optional[str] = None
@@ -47,7 +58,7 @@ class EmailItem(BaseModel):
 
 class EmailSummary(BaseModel):
     """
-    Sidebar list summary
+    Lightweight summary used for sidebar list display.
     """
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
@@ -62,6 +73,9 @@ class EmailSummary(BaseModel):
 
 
 class EmailListResponse(BaseModel):
+    """
+    Response for email list endpoint.
+    """
     model_config = ConfigDict(extra="ignore")
 
     ok: bool
@@ -70,6 +84,9 @@ class EmailListResponse(BaseModel):
 
 
 class EmailDetailResponse(BaseModel):
+    """
+    Response for single email detail endpoint.
+    """
     model_config = ConfigDict(extra="ignore")
 
     ok: bool
@@ -79,7 +96,7 @@ class EmailDetailResponse(BaseModel):
 
 class EmailUpdateRequest(BaseModel):
     """
-    Optional for later writes (archive/reply/enrich).
+    Request model for updating email fields (e.g., reply, status, risk).
     """
     model_config = ConfigDict(populate_by_name=True, extra="ignore")
 
@@ -96,6 +113,9 @@ class EmailUpdateRequest(BaseModel):
 
 
 class EmailUpdateResponse(BaseModel):
+    """
+    Response after updating an email.
+    """
     model_config = ConfigDict(extra="ignore")
 
     ok: bool
@@ -104,6 +124,9 @@ class EmailUpdateResponse(BaseModel):
 
 
 class EmailDeleteResponse(BaseModel):
+    """
+    Response after deleting an email.
+    """
     model_config = ConfigDict(extra="ignore")
 
     ok: bool

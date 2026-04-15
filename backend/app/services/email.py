@@ -6,7 +6,14 @@ from app.services.user_data_store import UserDataStore, UserDataStoreError
 
 
 class EmailService:
+    """
+    Service layer for reading, normalizing, updating, and deleting email records.
+    """
+
     def __init__(self, store: Optional[UserDataStore] = None) -> None:
+        """
+        Initialize email service with a data store.
+        """
         self.store = store or UserDataStore()
 
     def list_emails(
@@ -16,16 +23,18 @@ class EmailService:
         archived: Optional[bool] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Return list of summary dicts.
+        Return a list of email summary dicts.
+
         archived:
           - None: all
           - False: only unarchived (group_id is null)
           - True: only archived (group_id not null)
-        Sorted by numeric id desc (since you don't use timestamps).
+
+        Emails are sorted by numeric ID in descending order.
         """
         ids = self.store.list_email_ids(uid)
 
-        # Sort latest-first by numeric id
+        # Sort latest-first by numeric ID
         ids_sorted = sorted(ids, key=lambda x: int(x), reverse=True)
 
         out: List[Dict[str, Any]] = []
@@ -62,9 +71,12 @@ class EmailService:
         return out
 
     def get_email(self, uid: str, email_id: str) -> Dict[str, Any]:
+        """
+        Return a full email record with required default fields added if missing.
+        """
         e = self.store.read_email(uid, email_id)
 
-        # Ensure required keys exist (demo-friendly defaults)
+        # Ensure required top-level fields exist
         e.setdefault("id", email_id)
         e.setdefault("source_region", None)
         e.setdefault("language", None)
@@ -74,6 +86,7 @@ class EmailService:
         e.setdefault("from", None)
         e.setdefault("status", "draft")
 
+        # Normalize risk structure
         risk = e.get("risk")
         if not isinstance(risk, dict):
             risk = {}
@@ -87,8 +100,9 @@ class EmailService:
 
     def update_email(self, uid: str, email_id: str, patch: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Lightweight PATCH update for later (archive/reply/enrich).
-        Only updates whitelisted fields.
+        Apply a lightweight patch update to an email record.
+
+        Only whitelisted fields can be updated.
         """
         e = self.get_email(uid, email_id)
 
@@ -107,10 +121,13 @@ class EmailService:
             if k in allowed_fields:
                 e[k] = v
 
-        # Write back
+        # Write updated record back to storage
         self.store.ensure_user_skeleton(uid)
         self.store.write_email(uid, e)
         return e
-    
+
     def delete_email(self, uid: str, email_id: str) -> None:
+        """
+        Delete an email record by ID.
+        """
         self.store.delete_email(uid, email_id)

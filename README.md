@@ -106,6 +106,12 @@ All tests passed successfully during final evaluation.
 - The API key is required but is not included in this repository
 - Output quality depends on model behaviour and input quality
 
+- User registration is currently disabled in this version of the system.
+  For testing purposes, the following account can be used:
+
+      Username: Admin
+      Password: password
+
 ## Author
 
 Xian Diao

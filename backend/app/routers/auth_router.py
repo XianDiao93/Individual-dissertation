@@ -8,8 +8,12 @@ from app.services.auth_instance import auth_service
 
 router = APIRouter()
 
+
 @router.post("/login", response_model=LoginResponse)
 async def login_endpoint(req: LoginRequest) -> LoginResponse:
+    """
+    Handle user login request.
+    """
     result = auth_service.login(
         user_name=req.user_name,
         password=req.password
@@ -21,6 +25,9 @@ async def login_endpoint(req: LoginRequest) -> LoginResponse:
 async def me_endpoint(
     authorization: Optional[str] = Header(default=None)
 ) -> MeResponse:
+    """
+    Return current user info based on Bearer token.
+    """
     if not authorization or not authorization.startswith("Bearer "):
         return MeResponse(ok=False)
 
@@ -39,6 +46,9 @@ async def me_endpoint(
 
 @router.post("/logout")
 async def logout_endpoint(authorization: str = Header(default=None)):
+    """
+    Handle user logout by invalidating the token.
+    """
     if authorization and authorization.startswith("Bearer "):
         token = authorization.replace("Bearer ", "")
         auth_service.logout(token)

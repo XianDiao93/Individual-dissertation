@@ -14,9 +14,10 @@ from app.utils.file_utils import save_bytes_to_output, save_upload_to_output
 
 router = APIRouter()
 
+
 async def _read_template_text(template_file: Optional[UploadFile]) -> str:
     """
-    Read uploaded template file content as text (best-effort).
+    Read uploaded template file as text (best effort decoding).
     """
     if not template_file:
         return ""
@@ -49,22 +50,19 @@ async def generate_document_pdf(
     product_image: UploadFile | None = File(None),
 ):
     """
-    Unified endpoint to generate PDF documents.
+    Generate a PDF document.
 
-    - For sales_contract / quotation:
-        optional template_file is used as a base text template.
-    - For product_manual:
-        optional product_image is inserted as a diagram, together with manual text.
-
-    The generated PDF is also saved under the project's 'output/' directory.
+    - Uses optional template for contracts/quotations
+    - Uses optional image for product manuals
+    - Saves generated PDF to output directory
     """
-    # Normalise & validate document_type
+    # Convert document_type to enum (fallback to sales_contract if invalid)
     try:
         doc_type_enum = DocumentType(document_type)
     except ValueError:
         doc_type_enum = DocumentType.sales_contract
 
-    # Build structured data
+    # Build structured document data
     data = BaseDocumentData(
         document_type=doc_type_enum,
         currency=currency,
@@ -78,7 +76,7 @@ async def generate_document_pdf(
         extra_notes=extra_notes or None,
     )
 
-    # Read template (for contract/quotation)
+    # Read template text if provided (for contract/quotation)
     template_text = ""
     if doc_type_enum in (DocumentType.sales_contract, DocumentType.quotation) and template_file:
         template_text = await _read_template_text(template_file)
@@ -87,11 +85,12 @@ async def generate_document_pdf(
     image_path: Optional[Path] = None
     if doc_type_enum == DocumentType.product_manual and product_image:
         image_path = save_upload_to_output(product_image, prefix="manual_image")
-        # Write image bytes to the saved path
+
+        # Write uploaded image bytes to file
         img_bytes = await product_image.read()
         image_path.write_bytes(img_bytes)
 
-    # Generate PDF bytes + description
+    # Generate PDF content and description
     pdf_bytes, description = generate_document_pdf_bytes(
         data=data,
         template_text=template_text or None,
@@ -102,6 +101,7 @@ async def generate_document_pdf(
     pdf_path = save_bytes_to_output(pdf_bytes, prefix=data.document_type.value, suffix=".pdf")
     generated = build_generated_document(pdf_path, data, description)
 
+    # Return PDF as downloadable response
     return StreamingResponse(
         BytesIO(pdf_bytes),
         media_type="application/pdf",

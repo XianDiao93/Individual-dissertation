@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 
+# Mapping from overall risk level to final decision
 SEVERITY_TO_DECISION = {
     "critical": "BLOCK",
     "high": "BLOCK",
@@ -11,6 +12,7 @@ SEVERITY_TO_DECISION = {
     "unknown": "CLEAR",
 }
 
+# Priority ranking for severity comparison
 SEVERITY_PRIORITY = {
     "critical": 4,
     "high": 3,
@@ -19,6 +21,7 @@ SEVERITY_PRIORITY = {
     "unknown": 0,
 }
 
+# Numeric score used for aggregated risk calculation
 SEVERITY_SCORE = {
     "critical": 10,
     "high": 6,
@@ -27,10 +30,14 @@ SEVERITY_SCORE = {
     "unknown": 0,
 }
 
+# Default tag used when no risks are detected
 NO_RISK_TAG = "no_risk_recognised"
 
 
 def _normalize_severity(severity: str | None) -> str:
+    """
+    Normalize severity value and fall back to 'unknown' if invalid.
+    """
     sev = (severity or "unknown").lower().strip()
     if sev not in SEVERITY_PRIORITY:
         return "unknown"
@@ -38,6 +45,9 @@ def _normalize_severity(severity: str | None) -> str:
 
 
 def _score_from_severities(severities: List[str]) -> int:
+    """
+    Calculate total numeric risk score from a list of severities.
+    """
     total = 0
     for severity in severities:
         sev = _normalize_severity(severity)
@@ -46,6 +56,9 @@ def _score_from_severities(severities: List[str]) -> int:
 
 
 def _highest_severity(severities: List[str]) -> str:
+    """
+    Return the highest severity from a list.
+    """
     if not severities:
         return "low"
 
@@ -63,7 +76,9 @@ def _highest_severity(severities: List[str]) -> str:
 
 
 def _level_from_total_score(total_score: int) -> str:
-
+    """
+    Convert aggregated numeric score into overall risk level.
+    """
     if total_score <= 2:
         return "low"
     if total_score <= 7:
@@ -74,7 +89,15 @@ def _level_from_total_score(total_score: int) -> str:
 
 
 def _final_level_from_severities(severities: List[str]) -> str:
+    """
+    Determine final overall risk level from tag severities.
 
+    Rules:
+    - No severities -> low
+    - Any critical -> critical
+    - Otherwise use total score
+    - Preserve 'high' if a high-severity tag exists
+    """
     if not severities:
         return "low"
 
@@ -95,6 +118,8 @@ def _final_level_from_severities(severities: List[str]) -> str:
 
 def decide_from_tags(tags: List[str], tag_severity_map: Dict[str, str]) -> Dict[str, str | int | List[str]]:
     """
+    Decide final risk result from detected tags and tag severity mapping.
+
     Returns:
     {
         "decision": "CLEAR" | "WARN" | "BLOCK",
@@ -104,8 +129,10 @@ def decide_from_tags(tags: List[str], tag_severity_map: Dict[str, str]) -> Dict[
         "effective_tags": [...]
     }
     """
+    # Remove empty tag values
     clean_tags = [str(tag).strip() for tag in tags if str(tag).strip()]
 
+    # Return default low-risk result if no tags are present
     if not clean_tags:
         return {
             "decision": "CLEAR",
@@ -115,11 +142,13 @@ def decide_from_tags(tags: List[str], tag_severity_map: Dict[str, str]) -> Dict[
             "effective_tags": [NO_RISK_TAG],
         }
 
+    # Map tags to normalized severities
     severities = [
         _normalize_severity(tag_severity_map.get(tag, "unknown"))
         for tag in clean_tags
     ]
 
+    # Compute total score, final level, and final decision
     total_score = _score_from_severities(severities)
     level = _final_level_from_severities(severities)
     decision = SEVERITY_TO_DECISION.get(level, "CLEAR")

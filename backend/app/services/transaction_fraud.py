@@ -6,6 +6,7 @@ import re
 from typing import Any, Dict, List
 
 
+# Patterns indicating suspicious urgency in communication
 SUSPICIOUS_URGENCY_PATTERNS = [
     r"\burgent\b",
     r"\basap\b",
@@ -16,6 +17,7 @@ SUSPICIOUS_URGENCY_PATTERNS = [
     r"\btoday only\b",
 ]
 
+# Language patterns commonly found in scam-like messages
 SCAM_LANGUAGE_PATTERNS = [
     r"\bkindly\b",
     r"\btrusted partner\b",
@@ -25,6 +27,7 @@ SCAM_LANGUAGE_PATTERNS = [
     r"\bhope to hear from you soonest\b",
 ]
 
+# Risky or non-standard payment method indicators
 PAYMENT_RISK_PATTERNS = [
     r"\bwestern union\b",
     r"\bmoneygram\b",
@@ -36,6 +39,7 @@ PAYMENT_RISK_PATTERNS = [
     r"\bprivate account\b",
 ]
 
+# Low-information request patterns (often seen in scam or low-quality inquiries)
 LOW_DETAIL_PATTERNS = [
     r"\bsend price\b",
     r"\bsend quotation\b",
@@ -44,6 +48,7 @@ LOW_DETAIL_PATTERNS = [
     r"\bneed products\b",
 ]
 
+# Common free email providers (lower trust than corporate domains)
 FREE_EMAIL_DOMAINS = [
     "gmail.com",
     "outlook.com",
@@ -57,12 +62,18 @@ FREE_EMAIL_DOMAINS = [
 
 
 def _normalize_text(text: str) -> str:
+    """
+    Normalize text for pattern matching.
+    """
     text = (text or "").strip().lower()
     text = re.sub(r"\s+", " ", text)
     return text
 
 
 def _has_any_pattern(text: str, patterns: List[str]) -> bool:
+    """
+    Check whether any regex pattern matches the text.
+    """
     for pattern in patterns:
         if re.search(pattern, text, flags=re.IGNORECASE):
             return True
@@ -70,6 +81,9 @@ def _has_any_pattern(text: str, patterns: List[str]) -> bool:
 
 
 def _email_domain(email: str) -> str:
+    """
+    Extract domain from email address.
+    """
     email = (email or "").strip().lower()
     if "@" not in email:
         return ""
@@ -77,6 +91,9 @@ def _email_domain(email: str) -> str:
 
 
 def analyze(normalized_facts: Dict[str, Any], raw_message: str = "") -> Dict[str, Any]:
+    """
+    Detect transaction and fraud-related risks from message content and sender profile.
+    """
     text = _normalize_text(raw_message)
 
     tags: list[str] = []
@@ -85,11 +102,11 @@ def analyze(normalized_facts: Dict[str, Any], raw_message: str = "") -> Dict[str
     company_name = str(normalized_facts.get("company_name", "")).strip()
     product_requested = str(normalized_facts.get("product_requested", "")).strip()
 
-    # 1. suspicious urgency
+    # 1. Suspicious urgency signals
     if _has_any_pattern(text, SUSPICIOUS_URGENCY_PATTERNS):
         tags.append("suspicious_urgency")
 
-    # 2. possible scam pattern
+    # 2. Possible scam pattern (combined signals)
     scam_signal_count = 0
     if _has_any_pattern(text, SCAM_LANGUAGE_PATTERNS):
         scam_signal_count += 1
@@ -101,7 +118,7 @@ def analyze(normalized_facts: Dict[str, Any], raw_message: str = "") -> Dict[str
     if scam_signal_count >= 2:
         tags.append("possible_scam_pattern")
 
-    # 3. unverified counterparty
+    # 3. Unverified counterparty detection
     domain = _email_domain(sender_email)
     unverified_score = 0
 
@@ -118,6 +135,7 @@ def analyze(normalized_facts: Dict[str, Any], raw_message: str = "") -> Dict[str
     if unverified_score >= 2:
         tags.append("unverified_counterparty")
 
+    # Remove duplicates
     tags = sorted(set(tags))
 
     summary = None

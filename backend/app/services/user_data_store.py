@@ -1,3 +1,4 @@
+# backend/app/services/user_data_store.py
 from __future__ import annotations
 
 import json
@@ -7,18 +8,23 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from app.services.auth_instance import auth_service
 from app.config import USER_DATA_DIR, USERS_JSON_PATH
 
 JsonValue = Union[Dict[str, Any], List[Any], str, int, float, bool, None]
 
 
 class UserDataStoreError(RuntimeError):
+    """
+    Custom exception for user data store errors.
+    """
     pass
 
 
 @dataclass(frozen=True)
 class StorePaths:
+    """
+    Container for resolved storage paths used by the data store.
+    """
     project_root: Path
     user_data_root: Path
     users_json: Path
@@ -26,6 +32,9 @@ class StorePaths:
 
     @staticmethod
     def discover(project_root: Optional[Path] = None) -> "StorePaths":
+        """
+        Resolve and return the main storage paths.
+        """
         user_data_root = USER_DATA_DIR
         users_json = USERS_JSON_PATH
         user_data_dir = user_data_root / "user_data"
@@ -38,23 +47,33 @@ class StorePaths:
 
 
 class UserDataStore:
+    """
+    File-based storage layer for user profiles, emails, and groups.
+    """
     EMAIL_FILE_RE = re.compile(r"^em_(\d{5})\.json$", re.IGNORECASE)
 
     def __init__(self, project_root: Optional[str] = None) -> None:
+        """
+        Initialize the data store and resolve storage paths.
+        """
         root_path = Path(project_root).resolve() if project_root else None
         self.paths = StorePaths.discover(root_path)
 
-    # -------------------------
     # basic fs helpers
-    # -------------------------
 
     @staticmethod
     def _read_json_file(path: Path) -> JsonValue:
+        """
+        Read JSON content from a file.
+        """
         with path.open("r", encoding="utf-8") as f:
             return json.load(f)
 
     @staticmethod
     def _write_json_atomic(path: Path, data: JsonValue) -> None:
+        """
+        Write JSON content atomically using a temporary file.
+        """
         path.parent.mkdir(parents=True, exist_ok=True)
 
         tmp_path = path.with_name(path.name + ".tmp")
@@ -65,42 +84,54 @@ class UserDataStore:
 
         os.replace(tmp_path, path)
 
-    # -------------------------
     # global users.json (auth)
-    # -------------------------
 
     def users_json_path(self) -> Path:
+        """
+        Return path to global users.json.
+        """
         return self.paths.users_json
 
     def load_users(self) -> List[Dict[str, Any]]:
+        """
+        Load all user records from users.json.
+        """
         p = self.paths.users_json
         if not p.exists():
             raise UserDataStoreError(f"users.json not found: {p}")
         data = self._read_json_file(p)
         if not isinstance(data, list):
             raise UserDataStoreError("users.json must be a JSON list")
-        return data  # type: ignore[return-value]
+        return data
 
-    # -------------------------
     # per-user dirs / files
-    # -------------------------
 
     def user_dir(self, uid: str) -> Path:
+        """
+        Return the root directory for a specific user.
+        """
         return self.paths.user_data_dir / str(uid)
 
     def ensure_user_skeleton(self, uid: str) -> None:
+        """
+        Ensure required per-user directories exist.
+        """
         udir = self.user_dir(uid)
         (udir / "emails").mkdir(parents=True, exist_ok=True)
         (udir / "documents").mkdir(parents=True, exist_ok=True)
 
-    # -------------------------
     # profile
-    # -------------------------
 
     def profile_path(self, uid: str) -> Path:
+        """
+        Return path to the user's profile JSON file.
+        """
         return self.user_dir(uid) / "profile.json"
 
     def read_profile(self, uid: str) -> Dict[str, Any]:
+        """
+        Read a user's profile or return default empty profile data.
+        """
         p = self.profile_path(uid)
         if not p.exists():
             return {
@@ -116,24 +147,34 @@ class UserDataStore:
         data = self._read_json_file(p)
         if not isinstance(data, dict):
             raise UserDataStoreError(f"profile must be a JSON object: {p}")
-        return data  # type: ignore[return-value]
+        return data
 
     def write_profile(self, uid: str, profile_obj: Dict[str, Any]) -> None:
+        """
+        Write a user's profile to disk.
+        """
         if str(profile_obj.get("uid", uid)) != str(uid):
             raise UserDataStoreError("profile.uid mismatch with requested uid")
         self._write_json_atomic(self.profile_path(uid), profile_obj)
 
-    # -------------------------
     # emails
-    # -------------------------
 
     def emails_dir(self, uid: str) -> Path:
+        """
+        Return the directory containing a user's email files.
+        """
         return self.user_dir(uid) / "emails"
 
     def email_path(self, uid: str, email_id: str) -> Path:
+        """
+        Return path to a specific email JSON file.
+        """
         return self.emails_dir(uid) / f"em_{email_id}.json"
 
     def list_email_ids(self, uid: str) -> List[str]:
+        """
+        List all existing email IDs for a user in ascending numeric order.
+        """
         d = self.emails_dir(uid)
         if not d.exists():
             return []
@@ -152,6 +193,9 @@ class UserDataStore:
         return [sid for _, sid in ids]
 
     def read_email(self, uid: str, email_id: str) -> Dict[str, Any]:
+        """
+        Read a specific email JSON file.
+        """
         p = self.email_path(uid, email_id)
 
         if not p.exists():
@@ -167,14 +211,18 @@ class UserDataStore:
 
         return data
 
-    # -------------------------
     # email meta / id allocation
-    # -------------------------
 
     def emails_meta_path(self, uid: str) -> Path:
+        """
+        Return path to the optional email metadata file.
+        """
         return self.user_dir(uid) / "emails_meta.json"
 
     def _read_emails_meta(self, uid: str) -> Dict[str, Any]:
+        """
+        Read email metadata if it exists.
+        """
         p = self.emails_meta_path(uid)
         if not p.exists():
             return {}
@@ -184,6 +232,9 @@ class UserDataStore:
         return {}
 
     def _write_emails_meta(self, uid: str, meta: Dict[str, Any]) -> None:
+        """
+        Write email metadata to disk.
+        """
         self._write_json_atomic(self.emails_meta_path(uid), meta)
 
     def find_smallest_available_email_id(self, uid: str) -> str:
@@ -209,16 +260,18 @@ class UserDataStore:
 
     def reserve_next_email_id(self, uid: str) -> str:
         """
-        Kept for backward compatibility, but now delegates to the smallest
-        available ID policy instead of relying on emails_meta.json.
+        Return the next available email ID.
+
+        Kept for backward compatibility.
         """
         return self.find_smallest_available_email_id(uid)
 
-    # -------------------------
     # email write / create / delete
-    # -------------------------
 
     def write_email(self, uid: str, email_obj: Dict[str, Any]) -> None:
+        """
+        Write an email JSON file to disk.
+        """
         email_id = str(email_obj.get("id") or "")
         if not re.fullmatch(r"\d{5}", email_id):
             raise UserDataStoreError("email_obj.id must be a 5-digit string like '00001'")
@@ -227,6 +280,9 @@ class UserDataStore:
         self._write_json_atomic(self.email_path(uid, email_id), email_obj)
 
     def create_email(self, uid: str, email_obj: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Create a new email record, assigning the smallest available ID if needed.
+        """
         self.ensure_user_skeleton(uid)
 
         obj = dict(email_obj)
@@ -252,6 +308,9 @@ class UserDataStore:
             candidate += 1
 
     def delete_email(self, uid: str, email_id: str) -> None:
+        """
+        Delete an email JSON file by ID.
+        """
         if not re.fullmatch(r"\d{5}", str(email_id)):
             raise UserDataStoreError("email_id must be a 5-digit string like '00001'")
 
@@ -261,14 +320,18 @@ class UserDataStore:
 
         p.unlink()
 
-    # -------------------------
     # groups
-    # -------------------------
 
     def groups_path(self, uid: str) -> Path:
+        """
+        Return path to the user's groups JSON file.
+        """
         return self.user_dir(uid) / "groups.json"
 
     def read_groups(self, uid: str) -> List[Dict[str, Any]]:
+        """
+        Read group data for a user.
+        """
         p = self.groups_path(uid)
         if not p.exists():
             return []
@@ -278,4 +341,7 @@ class UserDataStore:
         return [x for x in data if isinstance(x, dict)]  # type: ignore[return-value]
 
     def write_groups(self, uid: str, groups: List[Dict[str, Any]]) -> None:
+        """
+        Write group data for a user.
+        """
         self._write_json_atomic(self.groups_path(uid), groups)

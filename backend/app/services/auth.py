@@ -1,7 +1,5 @@
 # backend/app/services/auth.py
 
-# backend/app/services/auth.py
-
 from __future__ import annotations
 
 import json
@@ -23,6 +21,9 @@ DEFAUT_ITERATIONS = 260_000
 
 
 def _b64_decode_nopad(s: str) -> bytes:
+    """
+    Decode a URL-safe base64 string without requiring padding.
+    """
     s_padded = s + "=" * (-len(s) % 4)
     return base64.urlsafe_b64decode(s_padded.encode("ascii"))
 
@@ -59,6 +60,9 @@ def verify_password(password: str, stored: str) -> bool:
 
 @dataclass(frozen=True)
 class AuthUser:
+    """
+    Lightweight authenticated user object stored in session.
+    """
     uid: str
     user_name: str
     role: str
@@ -70,10 +74,13 @@ class AuthService:
     - load users from users.json
     - verify password
     - issue random token
-    - keep token->user mapping in memory
+    - keep token-to-user mapping in memory
     """
 
     def __init__(self, users_json_path: str, token_ttl_seconds: int = 24 * 3600) -> None:
+        """
+        Initialize auth service with user store path and token lifetime.
+        """
         self.users_json_path = users_json_path
         self.token_ttl_seconds = token_ttl_seconds
 
@@ -83,6 +90,9 @@ class AuthService:
     # ---- users ----
 
     def _load_users(self) -> list[dict[str, Any]]:
+        """
+        Load user records from users.json.
+        """
         if not os.path.exists(self.users_json_path):
             raise FileNotFoundError(f"users.json not found: {self.users_json_path}")
 
@@ -94,6 +104,9 @@ class AuthService:
         return data
 
     def _find_user_record_by_name(self, user_name: str) -> Optional[dict[str, Any]]:
+        """
+        Find a user record by username.
+        """
         users = self._load_users()
         for u in users:
             if str(u.get("user_name")) == str(user_name):
@@ -103,6 +116,9 @@ class AuthService:
     # ---- sessions ----
 
     def _cleanup_expired(self) -> None:
+        """
+        Remove expired session tokens from memory.
+        """
         now = int(time.time())
         expired = [t for t, (_, ts) in self._sessions.items() if now - ts > self.token_ttl_seconds]
         for t in expired:
@@ -110,6 +126,8 @@ class AuthService:
 
     def login(self, user_name: str, password: str) -> dict[str, Any]:
         """
+        Authenticate user and create a session token.
+
         Returns:
           success: {"ok": True, "token": "...", "role": "...", "user_name": "..."}
           failure: {"ok": False, "error": "invalid_credentials"}
@@ -138,6 +156,9 @@ class AuthService:
         return {"ok": True, "token": token, "role": role, "user_name": stored_user_name}
 
     def get_current_user(self, token: str) -> Optional[AuthUser]:
+        """
+        Return the current authenticated user for a valid token.
+        """
         self._cleanup_expired()
 
         entry = self._sessions.get(token)
@@ -153,5 +174,7 @@ class AuthService:
         return user
 
     def logout(self, token: str) -> None:
+        """
+        Invalidate a session token.
+        """
         self._sessions.pop(token, None)
-

@@ -5,6 +5,9 @@ from typing import Optional
 
 
 class DocumentType(str, Enum):
+    """
+    Supported document types for generation.
+    """
     sales_contract = "sales_contract"
     quotation = "quotation"
     product_manual = "product_manual"
@@ -13,7 +16,7 @@ class DocumentType(str, Enum):
 class BaseDocumentData(BaseModel):
     """
     Core structured data for all trade documents.
-    This is independent from HTTP (Form / File) details.
+    Independent from HTTP (Form / File) details.
     """
     document_type: DocumentType
     currency: str
@@ -29,8 +32,8 @@ class BaseDocumentData(BaseModel):
 
 class GeneratedDocument(BaseModel):
     """
-    Result of document generation (from the service layer).
+    Result of document generation (service layer output).
     """
-    file_path: str        # absolute path on disk
-    download_name: str    # suggested filename when downloading
-    description: str      # short natural-language description (for UI)
+    file_path: str
+    download_name: str
+    description: str

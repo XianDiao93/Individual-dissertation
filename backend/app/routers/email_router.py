@@ -12,10 +12,10 @@ from app.models.email_model import (
     EmailSummary,
     EmailUpdateRequest,
     EmailUpdateResponse,
-    EmailDeleteResponse,   # NEW
+    EmailDeleteResponse,
 )
 from app.services.email import EmailService
-from app.routers.auth_router import auth_service  # share same session store
+from app.routers.auth_router import auth_service  # shared auth service
 
 
 router = APIRouter(prefix="/emails", tags=["emails"])
@@ -23,6 +23,9 @@ email_service = EmailService()
 
 
 def _get_bearer_token(authorization: Optional[str]) -> Optional[str]:
+    """
+    Extract Bearer token from Authorization header.
+    """
     if not authorization:
         return None
     if not authorization.startswith("Bearer "):
@@ -36,6 +39,9 @@ async def list_emails(
     archived: Optional[bool] = Query(default=None),
     authorization: Optional[str] = Header(default=None),
 ) -> EmailListResponse:
+    """
+    Return a list of emails (optionally filtered by archived status).
+    """
     try:
         token = _get_bearer_token(authorization)
         if not token:
@@ -59,6 +65,9 @@ async def get_email_detail(
     email_id: str,
     authorization: Optional[str] = Header(default=None),
 ) -> EmailDetailResponse:
+    """
+    Return full details of a specific email.
+    """
     try:
         token = _get_bearer_token(authorization)
         if not token:
@@ -81,6 +90,9 @@ async def patch_email(
     req: EmailUpdateRequest,
     authorization: Optional[str] = Header(default=None),
 ) -> EmailUpdateResponse:
+    """
+    Update an email (e.g., reply, status, risk).
+    """
     try:
         token = _get_bearer_token(authorization)
         if not token:
@@ -96,12 +108,16 @@ async def patch_email(
 
     except Exception as e:
         return EmailUpdateResponse(ok=False, error=str(e))
-    
+
+
 @router.delete("/{email_id}", response_model=EmailDeleteResponse)
 async def delete_email(
     email_id: str,
     authorization: Optional[str] = Header(default=None),
 ) -> EmailDeleteResponse:
+    """
+    Delete an email by ID.
+    """
     try:
         token = _get_bearer_token(authorization)
         if not token:

@@ -3,7 +3,7 @@ import { callCommunicationAPI, getMyProfile } from "./api.js";
 const API_BASE_URL = "http://127.0.0.1:8000";
 
 /* =========================
-   DOM refs
+   DOM references
 ========================= */
 const loginScreen = document.getElementById("loginScreen");
 const workspaceShell = document.getElementById("workspaceShell");
@@ -63,15 +63,25 @@ const profileCompanyName = document.getElementById("profileCompanyName");
 /* =========================
    Helpers
 ========================= */
+
+/**
+ * Read auth token from local storage.
+ */
 function getToken() {
     return localStorage.getItem("auth_token");
 }
 
+/**
+ * Build Authorization header if token exists.
+ */
 function authHeaders() {
     const token = getToken();
     return token ? { Authorization: "Bearer " + token } : {};
 }
 
+/**
+ * Generic helper for JSON API requests.
+ */
 async function fetchJson(url, options = {}) {
     const res = await fetch(url, options);
     if (!res.ok) {
@@ -88,6 +98,9 @@ async function fetchJson(url, options = {}) {
     return res.json();
 }
 
+/**
+ * Escape HTML-sensitive characters before rendering.
+ */
 function escapeHtml(value) {
     return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -97,6 +110,9 @@ function escapeHtml(value) {
         .replaceAll("'", "&#39;");
 }
 
+/**
+ * Map risk severity to CSS class.
+ */
 function getSeverityClass(severity) {
     const s = String(severity || "unknown").toLowerCase();
     if (s === "critical" || s === "high") return "risk-high";
@@ -105,6 +121,9 @@ function getSeverityClass(severity) {
     return "risk-unknown";
 }
 
+/**
+ * Normalize risk tags from different backend response shapes.
+ */
 function normalizeRiskTags(source) {
     if (!source || typeof source !== "object") return [];
 
@@ -128,6 +147,9 @@ function normalizeRiskTags(source) {
     return [];
 }
 
+/**
+ * Render risk tags as HTML badges.
+ */
 function renderRiskTags(tags) {
     if (!Array.isArray(tags) || !tags.length) {
         return `<span class="risk-tag risk-unknown">unknown</span>`;
@@ -142,11 +164,17 @@ function renderRiskTags(tags) {
         .join(" ");
 }
 
+/**
+ * Clear communication input field.
+ */
 function resetCommunicationInputs() {
     const commMessage = document.getElementById("commMessage");
     if (commMessage) commMessage.value = "";
 }
 
+/**
+ * Reset all document form inputs to default values.
+ */
 function resetDocumentInputs() {
     const ids = [
         "docSeller",
@@ -189,10 +217,16 @@ function resetDocumentInputs() {
     }
 }
 
+/**
+ * Reset main response panel text.
+ */
 function resetResponsePanel() {
     responseBody.textContent = "The AI response will appear here.";
 }
 
+/**
+ * Reset email detail panel.
+ */
 function resetEmailDetailPanel() {
     selectedEmailId = null;
     emailDetailTitle.textContent = "Email";
@@ -204,6 +238,9 @@ function resetEmailDetailPanel() {
     emailDetailReplyBox.textContent = "No reply";
 }
 
+/**
+ * Reset profile panel.
+ */
 function resetProfilePanel() {
     profileStatus.textContent = "Loading...";
     profileUid.textContent = "-";
@@ -216,12 +253,18 @@ function resetProfilePanel() {
     profileCompanyName.textContent = "-";
 }
 
+/**
+ * Reset email sidebar.
+ */
 function resetEmailsSidebar() {
     unarchivedCountEl.textContent = "0";
     emailsListEl.innerHTML = "";
     emailsEmptyEl.style.display = "block";
 }
 
+/**
+ * Reset the whole workspace state after logout or reload.
+ */
 function resetWorkspaceState() {
     currentMode = "communication";
     showView("home");
@@ -254,6 +297,9 @@ function resetWorkspaceState() {
 let currentView = "home";
 let selectedEmailId = null;
 
+/**
+ * Switch between main views.
+ */
 function showView(viewName) {
     currentView = viewName;
 
@@ -307,11 +353,16 @@ tabs.forEach((tab) => {
 /* =========================
    Backend call
 ========================= */
+
+/**
+ * Main action handler for communication and document modes.
+ */
 async function callBackend() {
     btnSubmit.disabled = true;
     btnSubmit.textContent = "Processing...";
 
     try {
+        // Communication mode: send message to backend and render reply
         if (currentMode === "communication") {
             const message = document.getElementById("commMessage").value.trim();
 
@@ -329,6 +380,7 @@ async function callBackend() {
             return;
         }
 
+        // Document mode: send form-data to PDF generation endpoint
         if (currentMode === "document") {
             const docType = document.getElementById("docType").value;
             const currency = document.getElementById("docCurrency").value;
@@ -387,6 +439,7 @@ async function callBackend() {
                 const blob = await res.blob();
                 const url = URL.createObjectURL(blob);
 
+                // Trigger browser download for generated PDF
                 const a = document.createElement("a");
                 a.href = url;
                 a.download = `${docType}.pdf`;
@@ -428,6 +481,10 @@ btnClear.addEventListener("click", () => {
 /* =========================
    Auth: login/logout
 ========================= */
+
+/**
+ * Handle user login and switch to workspace on success.
+ */
 async function login() {
     const userName = document.getElementById("loginUserName").value.trim();
     const password = document.getElementById("loginPassword").value.trim();
@@ -465,6 +522,9 @@ async function login() {
 
 loginBtn.addEventListener("click", login);
 
+/**
+ * Handle logout and clear local session state.
+ */
 function logout() {
     const token = localStorage.getItem("auth_token");
 
@@ -486,6 +546,9 @@ function logout() {
 
 logoutBtn.addEventListener("click", logout);
 
+/**
+ * Initialize application state on page load.
+ */
 window.addEventListener("DOMContentLoaded", async () => {
     resetWorkspaceState();
 
@@ -504,6 +567,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 /* =========================
    Profile loading
 ========================= */
+
+/**
+ * Load current user's profile into the profile view.
+ */
 async function loadProfile() {
     if (!profileStatus) return;
 
@@ -550,6 +617,10 @@ async function loadProfile() {
 /* =========================
    Emails: list + detail
 ========================= */
+
+/**
+ * Load unarchived emails and render the sidebar list.
+ */
 async function renderEmailsList() {
     const token = getToken();
     if (!token) {
@@ -625,6 +696,9 @@ async function renderEmailsList() {
     }
 }
 
+/**
+ * Load a single email and render the detail view.
+ */
 async function openEmailDetail(emailId) {
     const token = getToken();
     if (!token) return;
@@ -714,6 +788,9 @@ navProfileBtn.addEventListener("click", async () => {
 profileBackBtn.addEventListener("click", () => showView("home"));
 emailDetailBackBtn.addEventListener("click", () => showView("home"));
 
+/**
+ * Delete currently selected email from backend and refresh sidebar.
+ */
 emailDetailDeleteBtn.addEventListener("click", async () => {
     const token = getToken();
     if (!token) return;

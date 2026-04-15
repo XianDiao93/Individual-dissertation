@@ -14,6 +14,10 @@ router = APIRouter(prefix="/api/risk", tags=["risk"])
 
 @router.post("/analyze", response_model=RiskResponse)
 async def analyze_risk_endpoint(req: RiskRequest) -> RiskResponse:
+    """
+    Analyze risk based on message and optional normalized facts.
+    """
+    # Use provided normalized facts if available, otherwise extract them
     if req.normalized_facts:
         facts = req.normalized_facts
     else:
@@ -23,11 +27,13 @@ async def analyze_risk_endpoint(req: RiskRequest) -> RiskResponse:
             preferred_language=None,
         )
 
+    # Run risk analysis
     result_dict = analyze_risks(
         normalized_facts=facts,
         raw_message=req.message,
     )
 
+    # Convert to response model
     result = RiskResult(**result_dict)
 
     return RiskResponse(
