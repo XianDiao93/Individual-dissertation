@@ -69,11 +69,47 @@ Entry point of the backend server.
 
 ---
 
-### tests/
+## Testing
 
-Contains test scripts for backend components.
+Unit tests are implemented using `pytest` to validate core backend logic.
 
----
+### Test Scope
+
+The tests focus on deterministic and rule-based components:
+
+- **decision_engine.py**
+  - Risk scoring and overall decision calculation
+
+- **extraction.py**
+  - Trade information post-processing and normalization
+
+- **llm_client.py**
+  - Response cleaning and language handling
+
+- **communication.py**
+  - Reply generation wrapper and parameter handling
+
+- **risk.py**
+  - Risk orchestration and output structure
+
+### Run Tests
+
+Before running tests, set environment variables:
+
+PowerShell:
+
+    $env:PYTHONPATH="backend"
+    $env:OPENAI_API_KEY="test-key"
+
+Then run:
+
+    pytest
+
+### Notes
+
+- External LLM calls are mocked where necessary
+- Tests focus on core logic rather than full API integration
+- This ensures fast and reliable test execution
 
 ### requirements.txt
 

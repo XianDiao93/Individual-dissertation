@@ -68,6 +68,38 @@ Frontend address:
 
     http://127.0.0.1:5500
 
+## Testing
+
+This project includes a set of unit tests implemented using `pytest` to validate core system logic.
+
+### Test Coverage
+
+The tests focus on key components of the backend system:
+
+- Decision engine (risk level and decision calculation)
+- Extraction module (post-processing and normalization)
+- LLM client (response formatting and language handling)
+- Communication module (reply generation wrapper)
+- Risk analysis module (risk orchestration logic)
+
+### Run Tests
+
+Before running tests, set the required environment variables:
+
+PowerShell:
+    $env:PYTHONPATH="backend"
+    $env:OPENAI_API_KEY="test-key"
+
+Then run:
+
+    pytest
+
+All tests are located in:
+
+    backend/tests/
+
+All tests passed successfully during final evaluation.
+
 ## Notes
 
 - This system relies on the OpenAI API

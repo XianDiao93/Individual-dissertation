@@ -99,8 +99,16 @@ Individual dissertation/
 |  |  |- utils/
 |  |     |- __init__.py
 |  |     |- file_utils.py
+|  |     |- llm_doc_utils.py
+|  |     |- llm_reply_utils.py
 |  |
 |  |- tests/
+|  |  |- test_communication.py
+|  |  |- test_decision_engine.py
+|  |  |- test_extraction.py
+|  |  |- test_llm_client.py
+|  |  |- test_risks.py
+|  |
 |  |- requirements.txt
 |  |- README.md
 |

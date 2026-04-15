@@ -56,36 +56,43 @@
 \begin{titlepage}
 \centering
 
-{\LARGE School of Computer Science\\
-University of Nottingham\par}
-
-\vspace{2.5cm}
+\vspace*{2.5cm}
 
 {\Huge \textbf{AI-Driven Trade Communication Assistant}\par}
 
 \vspace{2.5cm}
 
-{\large Author\\
-——\\
-20513832\\
-scyxd6@nottingham.ac.uk\\
+{\large
+Submitted 14 April 2026, in partial fulfilment of\\
+the conditions for the award of the degree\\
+BSc Computer Science with Artificial Intelligence.
 \par}
 
-\vspace{2cm}
+\vspace{2.5cm}
 
-{\large Supervised by\\
-Paul Tennent\\
-paul.tennent@nottingham.ac.uk\par}
+{\Large
+20513832
+\par}
 
-\vspace{2cm}
+\vspace{1cm}
 
-{\large I hereby declare that this dissertation is all my own work, except as indicated in the text.\par}
+{\large
+School of Computer Science\\
+University of Nottingham
+\par}
+
+\vfill
+
+{\large
+I hereby declare that this dissertation is all my own work, except as indicated in the text.
+\par}
 
 \vspace{1.5cm}
 
-{\large Date: 14 April 2026\par}
-
-\vfill
+{\large
+Signature XD\\[0.6cm]
+Date 14/04/2026
+\par}
 
 \end{titlepage}
 
@@ -107,19 +114,16 @@ Results indicate that the system generates clear, professional, and contextually
 
 Overall, this work demonstrates the feasibility of integrating AI-driven communication and risk analysis within a unified framework, and highlights its potential as an assistive tool for international trade.
 
-
+\clearpage
 \section*{Use of Artificial Intelligence Tools}
 
-In this dissertation, AI tools are used solely for supportive purposes.
+In this dissertation, AI tools were used solely for supportive purposes.
 
-First of all, AI was used to extensively search for potentially useful literature, then all literatures were independently reviewed by the author, select literatures that can support the arguments.
+Firstly, AI was also used to generate preliminary summaries of large volumes of content, with the aim of improving efficiency. These summaries were subsequently verified and refined by the author.
 
-AI was also userd to conduct a preliminary summary of a large amount of content, to reduce time wastage and improve work efficiency.
-
-In addition, AI was used to help improve formatting and language clarity, particularly in ensuring compliance with academic writing conventions.
+In addition, AI tools were employed to support language clarity and formatting, particularly in aligning the writing with academic conventions.
 
 All core ideas, system design, implementation, analysis, and conclusions presented in this dissertation are the original work of the author.
-
 %
 %\chapter*{Acknowledgements}
 %\addcontentsline{toc}{chapter}{Acknowledgements}
@@ -678,27 +682,54 @@ Quantitative results indicate generally positive evaluations across multiple cri
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=0.45\linewidth]{reasonable.png}
-	\includegraphics[width=0.45\linewidth]{professional.png}
 	
-	\includegraphics[width=0.45\linewidth]{helpful.png}
-	\includegraphics[width=0.45\linewidth]{correct.png}
+	\begin{subfigure}{0.45\linewidth}
+		\includegraphics[width=\linewidth]{reasonable.png}
+		\caption{Relevance: "This response is reasonable"}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{0.45\linewidth}
+		\includegraphics[width=\linewidth]{professional.png}
+		\caption{Tone appropriateness: "This response is professional"}
+	\end{subfigure}
+	
+	\vspace{0.5cm}
+	
+	\begin{subfigure}{0.45\linewidth}
+		\includegraphics[width=\linewidth]{helpful.png}
+		\caption{Practicality: "This response helps advance cooperation"}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}{0.45\linewidth}
+		\includegraphics[width=\linewidth]{correct.png}
+		\caption{Risk identification: "This response correctly identifies potential risks"}
+	\end{subfigure}
 
-	\caption{Participant evaluation results across key criteria}
+	\caption{Participant evaluation results across key criteria (translated from Chinese)}
 	\label{fig:charts}
 \end{figure}
 
 As shown in Figure~\ref{fig:charts}, the system received consistently high ratings across the evaluated dimensions.
 
-For relevance ("this response is reasonable" at top left), most of participants rated the responses as 4 or 5, indicating that the generated replies were generally appropriate and aligned with the original enquiry.
+For relevance ("this response is reasonable"), most of participants rated the responses as 4 or 5, indicating that the generated replies were generally appropriate and aligned with the original enquiry.
 
-Similarly, tone appropriateness ("this response is professional" at top right) received strong evaluations, with most responses concentrated in the higher rating range. This suggests that the system is effective in maintaining a formal and suitable tone for business communication.
+Similarly, tone appropriateness ("this response is professional") received strong evaluations, with most responses concentrated in the higher rating range. This suggests that the system is effective in maintaining a formal and suitable tone for business communication.
 
-In terms of practicality ("this response helps advance cooperation" at bottom left), most participants provided positive ratings, indicating that the responses are not only correct but also useful in progressing real-world interactions. However, the presence of a small number of lower ratings suggests that some responses may lack sufficient actionability in more complex scenarios.
+In terms of practicality ("this response helps advance cooperation"), most participants provided positive ratings, indicating that the responses are not only correct but also useful in progressing real-world interactions. However, the presence of a small number of lower ratings suggests that some responses may lack sufficient actionability in more complex scenarios.
 
-The system also performed well in risk identification ("this response correctly identifies potential risks" at bottom right), with the majority of participants agreeing that the risks that identified were correct and reasonable. This shows that the risk analysis module effectively captured important risk categories.
+The system also performed well in risk identification ("this response correctly identifies potential risks"), with the majority of participants agreeing that the risks that identified were correct and reasonable. This shows that the risk analysis module effectively captured important risk categories.
 
-Qualitative feedback further supports these findings. Several participants noted that the system is highly effective for handling routine enquiries and can significantly improve communication efficiency.
+Qualitative feedback further supports these findings. To provide deeper insight into user perceptions, selected participant comments are presented below (original responses were collected in Chinese and translated into English):
+
+\begin{itemize}
+    \item \textit{"The responses are clear and professional, and can be used directly in real business communication."}
+    
+    \item \textit{"It is very helpful for handling routine enquiries, especially when the information is complete."}
+    
+    \item \textit{"In some high-risk situations, the system should be more decisive instead of just asking for more information."}
+    
+    \item \textit{"The replies are polite and well-structured, but sometimes lack specific next steps."}
+\end{itemize}
 
 However, some participants indicated that in more complex or suspicious scenarios, the system could provide clearer guidance or more decisive responses. This aligns with both the quantitative results and the observations in high- and critical-risk scenarios, where response strategies were sometimes perceived as insufficiently strong.
 
@@ -804,193 +835,38 @@ This chapter has examined the broader system vision and its implications. While 
 
 \section{Project Summary}
 
-This dissertation has presented the design, development, and evaluation of an AI-driven trade communication assistant intended to support SMEs in international trade scenarios. The project was motivated by the practical challenges that SMEs face in cross-border business, including multilingual communication difficulties, limited access to standardised documentation support, and uncertainty in risk and compliance assessment.
+This dissertation has presented the design, development, and evaluation of an AI-driven trade communication assistant intended to support SMEs in international trade scenarios. The project was motivated by practical challenges faced by SMEs in cross-border business, including multilingual communication barriers, limited access to standardised documentation, and uncertainty in risk and compliance assessment.
 
-To address these challenges, the project developed a prototype system centred on two core functionalities: communication generation and risk identification, with an additional document generation component implemented as supporting functionality. The system adopts a modular client-server architecture and combines trade fact extraction, risk analysis, decision routing, and response generation within a unified workflow.
+To address these challenges, the project developed a prototype system centred on communication generation and risk identification, with document generation implemented as supporting functionality. The system adopts a modular client-server architecture and integrates trade fact extraction, risk analysis, decision routing, and response generation within a unified workflow.
 
-The development process followed an iterative approach. Initial implementation established the basic system pipeline, while later refinement focused on improving prompt design, output quality, risk-aware behaviour, and system usability. Through pilot testing and user feedback, the system was progressively improved to generate more natural, professional, and context-aware responses.
+The development process followed an iterative approach. Initial implementation established a functional system pipeline, while subsequent refinements focused on prompt design, response quality, risk-aware behaviour, and usability. Through pilot testing and user feedback, the system was progressively improved to produce more natural, professional, and context-aware responses.
 
-The user study further demonstrated that the system is capable of producing effective responses across a range of trade scenarios. In particular, the results suggest that the system performs well in routine and medium-risk cases, although further improvement is needed in handling more complex and critical-risk situations.
+The user study indicates that the system is capable of generating effective responses across a range of trade scenarios. In particular, it performs well in routine and medium-risk cases, although further improvement is required in handling complex and critical-risk situations.
 
 \section{Main Contributions}
 
 The main contributions of this project can be summarised as follows.
 
-First, the project proposed and implemented an integrated prototype for trade communication support, combining message understanding, communication generation, and risk identification within a single workflow. This addresses a gap in existing solutions, which often focus on isolated tasks rather than coordinated support.
+First, the project presents an integrated prototype for trade communication support, combining message understanding, communication generation, and risk identification within a single workflow. This addresses a limitation in existing approaches, which often focus on isolated functionalities rather than coordinated support.
 
-Second, the project developed a risk-aware communication mechanism in which generated replies are informed not only by message content, but also by structured trade facts and identified risk signals. This enables the system to produce responses that are more context-sensitive and better aligned with practical business requirements.
+Second, the project introduces a risk-aware communication mechanism, where generated responses are informed by both extracted trade facts and identified risk signals. This enables more context-sensitive and practically relevant responses in real-world trade scenarios.
 
-Third, the project demonstrated the importance of iterative refinement in LLM-based systems. Through pilot testing, prompt engineering, post-processing, and user feedback, the system was improved in terms of clarity, tone consistency, localisation, and practical usability.
+Third, the project highlights the importance of iterative refinement in LLM-based systems. Through prompt engineering, post-processing, and user feedback, the system achieved improvements in clarity, tone consistency, localisation, and usability.
 
-Finally, the project provides a foundation for future work on broader AI-assisted trade support systems. Although the current implementation remains a prototype, it establishes a modular architecture that can be extended towards more advanced decision-support and documentation capabilities.
+Finally, the project establishes a modular foundation for future AI-assisted trade support systems, demonstrating how multiple functionalities can be integrated into a coherent and extensible architecture.
 
 \section{Final Remarks}
 
-Overall, this project shows that AI can be used not only to automate isolated business tasks, but also to support more integrated trade communication workflows. The findings suggest that combining communication generation with structured risk analysis can provide practical value, particularly for SMEs that may lack the resources or expertise to manage complex international interactions efficiently.
+Overall, this project demonstrates that AI can support not only isolated business tasks, but also integrated trade communication workflows. As discussed in the literature, SMEs face multiple challenges in cross-border trade, including communication barriers, limited resources, and regulatory complexity \citep{itc2021,unctad2021,oecd2021}. 
 
-At the same time, the project also highlights the limitations of current prototype systems. Large language models remain imperfect, document support is not yet fully standardised, and deeper coordination between modules is still needed. For these reasons, the system should be understood as an assistive tool rather than a replacement for human judgement.
+This project addresses these challenges in a targeted manner. Communication barriers are mitigated through LLM-based multilingual response generation, enabling clearer and more professional interaction. Information asymmetry and incomplete inputs are partially addressed through structured trade fact extraction. In addition, regulatory uncertainty is considered through a risk identification mechanism that highlights potential compliance and transaction risks. 
 
-Despite these limitations, the project demonstrates the feasibility and potential of an AI-driven trade communication assistant. With further development, broader data integration, and more extensive real-world evaluation, such systems could evolve into valuable platforms for supporting SMEs in global trade.
+Furthermore, in contrast to prior work that primarily focuses on isolated functionalities such as document automation or general language generation \citep{oecd_doc,ozturk2024}, this project demonstrates the feasibility of integrating communication generation, risk analysis, and basic document support within a unified system. This integrated approach reduces the need for users to rely on multiple tools and provides a more coherent workflow for handling trade communication.
 
-% =========================
-% Appendix
-% =========================
-\appendix
+At the same time, the project highlights several limitations. While the system improves efficiency and supports decision-making, it does not fully resolve regulatory complexity, and risk identification remains approximate due to the limitations of text-based analysis. In addition, large language models may produce inconsistent outputs, and document generation is not yet fully standardised. These limitations reflect broader challenges identified in the literature and indicate areas for further development.
 
-\chapter{User Study Materials}
+Therefore, the system should be understood as an assistive tool rather than a replacement for human judgement. With further refinement, improved data integration, and more extensive real-world validation, such systems have the potential to become practical platforms that support SMEs in increasingly digitalised and complex global trade environments.
 
-\section{Survey Overview}
-
-This appendix presents the questionnaire used in the user study. The survey was designed to evaluate how users assess trade-related inquiries, respond to them, and perceive AI-generated responses.
-
-The questionnaire consists of multiple sections, including:
-\begin{itemize}
-    \item Participant language preference
-    \item Scenario-based inquiry evaluation
-    \item AI response assessment
-    \item Comparative judgement between human and AI responses
-    \item Overall system feedback
-\end{itemize}
-
----
-
-\section{Scenario Example}
-
-\subsection{Email Scenario}
-
-\textbf{Incoming Email:}
-
-\begin{quote}
-Dear Friend, \\
-We need your products urgently. Payment will be made by USDT or Bitcoin only. Please send invoice immediately and use a private account for faster settlement. Waiting for your urgent reply.
-\end{quote}
-
----
-
-\subsection{Stage 1: User Assessment}
-
-\textbf{Q1. What key information is missing and what are the potential risks in this inquiry?}
-
-(Open-ended response)
-
-\vspace{0.3cm}
-
-\textbf{Q2. How would you respond to this inquiry? (Select all that apply)}
-
-\begin{itemize}
-    \item Ask for product specifications
-    \item Ask for quantity
-    \item Ask for destination country
-    \item Ask for delivery address
-    \item Ask for company or buyer identity
-    \item Provide quotation
-    \item Provide product information/catalog
-    \item Request clarification before proceeding
-    \item Refuse to proceed
-    \item Other
-\end{itemize}
-
-\vspace{0.3cm}
-
-\textbf{Q3. What potential risks do you identify? (Select all that apply)}
-
-\begin{itemize}
-    \item Compliance and legal risks
-    \item Country/geopolitical risks
-    \item Business environment risks
-    \item Transaction and counterparty risks
-    \item Intent and commercial risks
-    \item No obvious risks
-    \item Other
-\end{itemize}
-
-\vspace{0.3cm}
-
-\textbf{Q4. How would you handle this inquiry?}
-
-\begin{itemize}
-    \item Proceed normally
-    \item Proceed with caution (verification needed)
-    \item Refuse to proceed
-\end{itemize}
-
----
-
-\subsection{Stage 2: AI Response Evaluation}
-
-\textbf{AI-generated response:}
-
-\begin{quote}
-Dear Friend, \\
-Thank you for your message. \\
-However, to proceed with your request, we need more information to verify your order and ensure a secure transaction. Could you please provide details regarding your company, including your registered address and any relevant identification? \\
-Looking forward to your prompt response. \\
-Best regards.
-\end{quote}
-
-\vspace{0.3cm}
-
-\textbf{Risk assessment provided by the system:}
-
-\begin{itemize}
-    \item Overall level: Critical
-    \item Tags: incomplete buyer profile, possible scam pattern, suspicious urgency, unverified counterparty
-\end{itemize}
-
-\vspace{0.3cm}
-
-\textbf{Q5. Please rate the following statements (1–5 Likert scale):}
-
-\begin{itemize}
-    \item The AI response is reasonable
-    \item The AI response is professional
-    \item The AI response helps advance the transaction
-    \item The AI response appropriately considers risks
-\end{itemize}
-
----
-
-\subsection{Stage 3: Comparative Evaluation}
-
-\textbf{Q6. Which response do you prefer?}
-
-\begin{itemize}
-    \item My own response
-    \item AI-generated response
-    \item Both are similar
-\end{itemize}
-
-\vspace{0.3cm}
-
-\textbf{Q7. Do you agree with the system's risk assessment?}
-
-\begin{itemize}
-    \item Fully agree
-    \item Partially agree
-    \item Disagree
-\end{itemize}
-
----
-
-\section{Overall Feedback}
-
-\textbf{Q8. Do you think this system is helpful? (1–5)}
-
-\vspace{0.3cm}
-
-\textbf{Q9. To what extent are you willing to use this system? (1–5)}
-
-\vspace{0.3cm}
-
-\textbf{Q10. How could the AI response be improved?}
-
-(Open-ended response)
-
-\vspace{0.3cm}
-
-\textbf{Q11. Why are you willing or not willing to use this system?}
-
-(Open-ended response)
 
 % =========================
 % References
@@ -1040,5 +916,161 @@ World Trade Organization (2025) \textit{World Trade Report 2025: Making trade an
 
 \end{thebibliography}
 \endgroup
+
+
+% =========================
+% Appendix
+% =========================
+\appendix
+
+\chapter{User Study Materials}
+
+\section{Survey Overview}
+
+This appendix presents the questionnaire used in the user study. The survey was designed to evaluate how users assess trade-related inquiries, respond to them, and perceive AI-generated responses.
+
+The questionnaire consists of multiple sections, including:
+\begin{itemize}
+    \item Participant language preference
+    \item Scenario-based inquiry evaluation
+    \item AI response assessment
+    \item Comparative judgement between human and AI responses
+    \item Overall system feedback
+\end{itemize}
+
+
+\section{Scenario Example}
+
+\subsection{Email Scenario}
+
+\textbf{Incoming Email:}
+
+\begin{quote}
+Dear Friend, \\
+We need your products urgently. Payment will be made by USDT or Bitcoin only. Please send invoice immediately and use a private account for faster settlement. Waiting for your urgent reply.
+\end{quote}
+
+
+\subsection{Stage 1: User Assessment}
+
+\textbf{Q1. What key information is missing and what are the potential risks in this inquiry?}
+
+(Open-ended response)
+
+\vspace{0.3cm}
+
+\textbf{Q2. How would you respond to this inquiry? (Select all that apply)}
+
+\begin{itemize}
+    \item Ask for product specifications
+    \item Ask for quantity
+    \item Ask for destination country
+    \item Ask for delivery address
+    \item Ask for company or buyer identity
+    \item Provide quotation
+    \item Provide product information/catalog
+    \item Request clarification before proceeding
+    \item Refuse to proceed
+    \item Other
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Q3. What potential risks do you identify? (Select all that apply)}
+
+\begin{itemize}
+    \item Compliance and legal risks
+    \item Country/geopolitical risks
+    \item Business environment risks
+    \item Transaction and counterparty risks
+    \item Intent and commercial risks
+    \item No obvious risks
+    \item Other
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Q4. How would you handle this inquiry?}
+
+\begin{itemize}
+    \item Proceed normally
+    \item Proceed with caution (verification needed)
+    \item Refuse to proceed
+\end{itemize}
+
+
+\subsection{Stage 2: AI Response Evaluation}
+
+\textbf{AI-generated response:}
+
+\begin{quote}
+Dear Friend, \\
+Thank you for your message. \\
+However, to proceed with your request, we need more information to verify your order and ensure a secure transaction. Could you please provide details regarding your company, including your registered address and any relevant identification? \\
+Looking forward to your prompt response. \\
+Best regards.
+\end{quote}
+
+\vspace{0.3cm}
+
+\textbf{Risk assessment provided by the system:}
+
+\begin{itemize}
+    \item Overall level: Critical
+    \item Tags: incomplete buyer profile, possible scam pattern, suspicious urgency, unverified counterparty
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Q5. Please rate the following statements (1–5 Likert scale):}
+
+\begin{itemize}
+    \item The AI response is reasonable
+    \item The AI response is professional
+    \item The AI response helps advance the transaction
+    \item The AI response appropriately considers risks
+\end{itemize}
+
+
+\subsection{Stage 3: Comparative Evaluation}
+
+\textbf{Q6. Which response do you prefer?}
+
+\begin{itemize}
+    \item My own response
+    \item AI-generated response
+    \item Both are similar
+\end{itemize}
+
+\vspace{0.3cm}
+
+\textbf{Q7. Do you agree with the system's risk assessment?}
+
+\begin{itemize}
+    \item Fully agree
+    \item Partially agree
+    \item Disagree
+\end{itemize}
+
+
+\section{Overall Feedback}
+
+\textbf{Q8. Do you think this system is helpful? (1–5)}
+
+\vspace{0.3cm}
+
+\textbf{Q9. To what extent are you willing to use this system? (1–5)}
+
+\vspace{0.3cm}
+
+\textbf{Q10. How could the AI response be improved?}
+
+(Open-ended response)
+
+\vspace{0.3cm}
+
+\textbf{Q11. Why are you willing or not willing to use this system?}
+
+(Open-ended response)
 
 \end{document}
