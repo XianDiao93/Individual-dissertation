@@ -6,6 +6,7 @@ __pycache__/
 .env
 .venv/
 venv/
+*.zip
 
 # FastAPI log
 *.log
@@ -20,7 +21,9 @@ build/
 .ipynb_checkpoints/
 
 # Data folder (don't track large files or datasets)
+output/
 data/
+user_data/
 !data/README.md
 
 # Documents
